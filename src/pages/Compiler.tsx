@@ -11,24 +11,101 @@ export default function Compiler() {
   const [isRunning, setIsRunning] = useState(false);
 
   const runCode = async () => {
+    if (!code.trim()) {
+      setOutput('Please write some code before running.');
+      return;
+    }
+
+    const apiKey = import.meta.env.VITE_JUDGE0_API_KEY;
+    const apiHost = import.meta.env.VITE_JUDGE0_API_HOST || 'judge0-ce.p.rapidapi.com';
+
+    if (!apiKey) {
+      setOutput('VITE_JUDGE0_API_KEY is not configured in environment variables.');
+      return;
+    }
+
     setIsRunning(true);
-    setOutput('Running...');
+    setOutput('Submitting to Judge0...');
     
-    // In a real app, this sends to Judge0 API. Mocking for preview.
     try {
-      setTimeout(() => {
-        let result = '';
-        if (code.includes('console.log')) {
-           const matches = code.match(/console\.log\((.*?)\)/);
-           result = matches ? matches[1].replace(/["']/g, '') : 'Execution success';
-        } else {
-           result = 'Program finished execution with no output.';
+      // 1. Submit code
+      const submitResponse = await fetch(`https://${apiHost}/submissions?base64_encoded=true&fields=*`, {
+        method: 'POST',
+        headers: {
+          'x-rapidapi-key': apiKey,
+          'x-rapidapi-host': apiHost,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          language_id: parseInt(languageId),
+          source_code: btoa(unescape(encodeURIComponent(code)))
+        })
+      });
+
+      if (!submitResponse.ok) {
+        throw new Error(`Submit failed: ${submitResponse.statusText}`);
+      }
+
+      const submitData = await submitResponse.json();
+      const token = submitData.token;
+
+      if (!token) {
+        throw new Error('No token received from compiler.');
+      }
+
+      setOutput('Compiling and running...');
+
+      // 2. Poll for results
+      let isDone = false;
+      let attempt = 0;
+      let finalOutput = '';
+
+      while (!isDone && attempt < 20) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempt++;
+
+        const resultResponse = await fetch(`https://${apiHost}/submissions/${token}?base64_encoded=true&fields=*`, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-key': apiKey,
+            'x-rapidapi-host': apiHost,
+          }
+        });
+
+        if (!resultResponse.ok) {
+          throw new Error('Failed to fetch execution results.');
         }
-        setOutput(result);
-        setIsRunning(false);
-      }, 1000);
-    } catch (e) {
-      setOutput('Error connecting to Judge0 API');
+
+        const resultData = await resultResponse.json();
+        const statusId = resultData.status?.id;
+
+        // 1 = In Queue, 2 = Processing
+        if (statusId > 2) {
+          isDone = true;
+          
+          const decode = (str: string) => str ? decodeURIComponent(escape(atob(str))) : '';
+          
+          if (statusId === 3) {
+            finalOutput = decode(resultData.stdout);
+          } else if (resultData.compile_output) {
+            finalOutput = `Compilation Error:\n${decode(resultData.compile_output)}`;
+          } else if (resultData.stderr) {
+            finalOutput = `Error:\n${decode(resultData.stderr)}`;
+          } else {
+            finalOutput = `Execution finished with status: ${resultData.status?.description}\n${decode(resultData.message || '')}`;
+          }
+        }
+      }
+
+      if (!isDone) {
+        setOutput('Execution timed out.');
+      } else {
+        setOutput(finalOutput || '\n(No output)');
+      }
+    } catch (e: any) {
+       console.error("Compiler error", e);
+       setOutput(`Error connecting to Judge0 API: ${e.message}`);
+    } finally {
       setIsRunning(false);
     }
   };

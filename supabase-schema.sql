@@ -99,5 +99,45 @@ ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 -- Profiles: Users can read all profiles (needed for dashboards), but only update their own (admins/super_admins can update all)
 CREATE POLICY "Profiles are readable by everyone" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Super admins can update any profile" ON profiles FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin'
+  )
+);
 
--- (Further granular policies would be added here depending on requirements)
+-- Lessons: Anyone can read, faculty/admin/super_admin can insert/update
+CREATE POLICY "Lessons are readable by everyone" ON lessons FOR SELECT USING (true);
+CREATE POLICY "Faculty and Admins can insert lessons" ON lessons FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+CREATE POLICY "Faculty and Admins can update lessons" ON lessons FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+CREATE POLICY "Faculty and Admins can delete lessons" ON lessons FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+
+-- Courses: 
+CREATE POLICY "Courses are readable by everyone" ON courses FOR SELECT USING (true);
+CREATE POLICY "Faculty and Admins can insert courses" ON courses FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+CREATE POLICY "Faculty and Admins can update courses" ON courses FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+CREATE POLICY "Faculty and Admins can delete courses" ON courses FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('faculty', 'admin', 'super_admin')
+  )
+);
+

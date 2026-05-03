@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Video, Server, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, Video, Server, CheckCircle2, AlertCircle, Youtube, Link as LinkIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -18,12 +18,73 @@ export default function FacultyStudio() {
   const [uploaded, setUploaded] = useState(false);
   const [errorInfo, setErrorInfo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [uploadMode, setUploadMode] = useState<'cloudflare' | 'youtube'>('youtube');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   const streamUrl = import.meta.env.VITE_CLOUDFLARE_STREAM_URL;
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorInfo(null);
+    setUploaded(false);
+
+    if (uploadMode === 'youtube') {
+      if (!youtubeUrl) {
+         setErrorInfo('Please enter a YouTube URL');
+         return;
+      }
+      setIsUploading(true);
+      
+      let ytId = null;
+      let contentType = 'youtube_video';
+      
+      // Check for playlist
+      if (youtubeUrl.includes('list=')) {
+        const listMatch = youtubeUrl.match(/[?&]list=([^#\&\?]+)/);
+        if (listMatch) {
+          ytId = listMatch[1];
+          contentType = 'youtube_playlist';
+        }
+      } 
+      
+      // If not a playlist or list parameter not found, check for normal video
+      if (!ytId) {
+        const ytIdMatch = youtubeUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+        if (ytIdMatch) {
+          ytId = ytIdMatch[1];
+        }
+      }
+
+      if (!ytId) {
+        setErrorInfo("Invalid YouTube URL or Playlist URL");
+        setIsUploading(false);
+        return;
+      }
+
+      try {
+        const { error: dbError } = await supabase.from('lessons').insert({
+          title: title,
+          content_type: contentType,
+          cf_stream_id: ytId, // Saving youtube ID here for simplicity
+          course_id: null
+        });
+
+        if (dbError) throw dbError;
+        
+        setUploaded(true);
+        setTitle('');
+        setDesc('');
+        setYoutubeUrl('');
+      } catch (err: any) {
+        console.error(err);
+        setErrorInfo(err.message || 'Error saving to database');
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
     if (!fileInputRef.current?.files?.[0]) {
       setErrorInfo("Please select a video file.");
       return;
@@ -111,16 +172,31 @@ export default function FacultyStudio() {
     <div className="max-w-4xl mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Faculty Studio</h1>
-        <p className="text-rose-400">Create new courses and direct-upload lessons via Cloudflare Stream.</p>
+        <p className="text-rose-400">Create new courses and direct-upload lessons via Cloudflare Stream or YouTube.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 bg-rose-900 border-rose-800 text-rose-100 shadow-none rounded-2xl">
           <CardHeader>
             <CardTitle>New Lesson Upload</CardTitle>
-            <CardDescription className="text-rose-400">Ensure your video is .mp4 or .mov</CardDescription>
+            <CardDescription className="text-rose-400">Add content to your courses</CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="flex gap-4 mb-6">
+              <button 
+                onClick={() => setUploadMode('youtube')}
+                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'youtube' ? 'bg-pink-500/10 border-pink-500 text-pink-400' : 'bg-rose-950 border-rose-800 hover:border-pink-500/50 text-rose-400'}`}
+              >
+                <Youtube className="w-5 h-5 mr-2" /> YouTube Link
+              </button>
+              <button 
+                onClick={() => setUploadMode('cloudflare')}
+                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'cloudflare' ? 'bg-pink-500/10 border-pink-500 text-pink-400' : 'bg-rose-950 border-rose-800 hover:border-pink-500/50 text-rose-400'}`}
+              >
+                <Video className="w-5 h-5 mr-2" /> Direct Upload
+              </button>
+            </div>
+
             <form onSubmit={handleUpload} className="space-y-6">
               
               {errorInfo && (
@@ -153,29 +229,43 @@ export default function FacultyStudio() {
                 />
               </div>
 
-              <div className="pt-4">
-                <div 
-                  className="border-2 border-dashed border-rose-700 rounded-xl p-8 text-center hover:border-pink-500 hover:bg-rose-800/50 transition-all cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-10 w-10 text-rose-400 mx-auto mb-4" />
-                  <p className="text-sm font-medium mb-1 text-rose-200">Click to select a video file</p>
-                  <p className="text-xs text-rose-500">Maximum file size: 5GB</p>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="video/*" 
-                    onChange={e => {
-                      if(e.target.files?.[0]) {
-                        // Just an immediate visual feedback, no state needed
-                      }
-                    }}
-                  />
+              {uploadMode === 'youtube' ? (
+                 <div className="space-y-2">
+                   <Label htmlFor="youtubeUrl" className="text-rose-300">YouTube URL</Label>
+                   <Input 
+                     id="youtubeUrl" 
+                     value={youtubeUrl} 
+                     onChange={e => setYoutubeUrl(e.target.value)} 
+                     required={uploadMode === 'youtube'}
+                     className="bg-rose-950 border-rose-800 text-rose-100 rounded-lg"
+                     placeholder="https://www.youtube.com/watch?v=..."
+                   />
+                 </div>
+              ) : (
+                <div className="pt-4">
+                  <div 
+                    className="border-2 border-dashed border-rose-700 rounded-xl p-8 text-center hover:border-pink-500 hover:bg-rose-800/50 transition-all cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-10 w-10 text-rose-400 mx-auto mb-4" />
+                    <p className="text-sm font-medium mb-1 text-rose-200">Click to select a video file</p>
+                    <p className="text-xs text-rose-500">Maximum file size: 5GB</p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="video/*" 
+                      onChange={e => {
+                        if(e.target.files?.[0]) {
+                          // Just an immediate visual feedback, no state needed
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {isUploading && (
+              {isUploading && uploadMode === 'cloudflare' && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-mono text-rose-400">
                     <span>Uploading...</span>
@@ -193,12 +283,12 @@ export default function FacultyStudio() {
               {uploaded && (
                  <div className="p-4 bg-pink-500/20 border border-pink-500 text-pink-400 rounded-lg flex items-center">
                     <CheckCircle2 className="h-5 w-5 mr-3 shrink-0" />
-                    <span className="text-sm font-medium">Video uploaded successfully to Cloudflare Stream!</span>
+                    <span className="text-sm font-medium">Lesson successfully added!</span>
                  </div>
               )}
 
               <Button type="submit" disabled={isUploading || !title} className="w-full bg-pink-500 hover:bg-pink-600 text-rose-950 font-semibold rounded-lg">
-                Upload & Create Lesson
+                {uploadMode === 'youtube' ? 'Save Lesson' : 'Upload & Create Lesson'}
               </Button>
             </form>
           </CardContent>

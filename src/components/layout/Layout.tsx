@@ -34,7 +34,7 @@ export function Layout() {
     { name: 'Dashboard', href: '/', icon: GraduationCap, roles: ['student', 'faculty', 'admin', 'super_admin'] },
     { name: 'Compiler', href: '/compiler', icon: Code, roles: ['student', 'faculty'] },
     { name: 'Aptitude Engine', href: '/aptitude', icon: BrainCircuit, roles: ['student'] },
-    { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'admin'] },
+    { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'admin', 'super_admin'] },
     { name: 'Users Panel', href: '/admin', icon: Users, roles: ['admin', 'super_admin'] },
   ];
 

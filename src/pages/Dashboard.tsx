@@ -1,17 +1,64 @@
 import { useAuth } from '../hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { StreakWidget } from '../components/widgets/StreakWidget';
-import { BookOpen, Clock, PlayCircle } from 'lucide-react';
+import { BookOpen, Clock, PlayCircle, Youtube, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
   const { profile } = useAuth();
+  const [youtubeVideos, setYoutubeVideos] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<any[]>([]);
   
   // Mock data for preview
   const recentCourses = [
     { id: 1, title: 'Data Structures in C++', progress: 45, thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=300&h=150&auto=format&fit=crop' },
     { id: 2, title: 'Vedic Mathematics Basics', progress: 12, thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=300&h=150&auto=format&fit=crop' },
   ];
+
+  useEffect(() => {
+    const fetchYouTubeVideos = async () => {
+      const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+      if (!apiKey) return;
+      
+      try {
+        // Querying educational programming content
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=programming+data+structures+educational&type=video&key=${apiKey}`);
+        if (response.ok) {
+          const data = await response.json();
+          setYoutubeVideos(data.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch YouTube videos", err);
+      }
+    };
+    
+    fetchYouTubeVideos();
+  }, []);
+
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('lessons')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setLessons(data || []);
+      } catch (err) {
+        console.error("Failed to fetch lessons", err);
+      }
+    };
+    
+    fetchLessons();
+  }, []);
+
+  const getYoutubeThumbnailUrl = (id: string) => {
+    return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+  };
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
@@ -92,6 +139,62 @@ export default function Dashboard() {
            ))}
         </div>
       </div>
+
+      {lessons.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold mb-4 text-rose-400 uppercase tracking-widest flex items-center">
+            <Video className="h-4 w-4 mr-2" />
+            Recently Added Lessons
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {lessons.map(lesson => (
+              <Card key={lesson.id} className="bg-rose-900 border-rose-800 text-rose-100 overflow-hidden rounded-2xl hover:border-pink-500/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
+                <div className="aspect-video w-full relative overflow-hidden bg-rose-950 flex items-center justify-center">
+                  {lesson.content_type.startsWith('youtube') ? (
+                    <img src={getYoutubeThumbnailUrl(lesson.cf_stream_id)} alt={lesson.title} className="object-cover w-full h-full" />
+                  ) : (
+                    <Video className="h-10 w-10 text-rose-800" />
+                  )}
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <PlayCircle className="h-12 w-12 text-pink-500" />
+                  </div>
+                </div>
+                <div className="p-4 flex-1">
+                  <h3 className="font-semibold text-sm leading-snug text-rose-200 line-clamp-2">{lesson.title}</h3>
+                  <p className="text-xs text-rose-400 mt-2">{lesson.content_type === 'youtube_playlist' ? 'Playlist' : 'Video'}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {youtubeVideos.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold mb-4 text-rose-400 uppercase tracking-widest flex items-center">
+            <Youtube className="h-4 w-4 mr-2" />
+            Recommended from YouTube
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {youtubeVideos.map(video => (
+              <a key={video.id.videoId} href={`https://www.youtube.com/watch?v=${video.id.videoId}`} target="_blank" rel="noopener noreferrer">
+                <Card className="bg-rose-900 border-rose-800 text-rose-100 overflow-hidden rounded-2xl hover:border-pink-500/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
+                  <div className="aspect-video w-full relative overflow-hidden">
+                    <img src={video.snippet.thumbnails.medium.url} alt={video.snippet.title} className="object-cover w-full h-full" />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <PlayCircle className="h-12 w-12 text-pink-500" />
+                    </div>
+                  </div>
+                  <div className="p-4 flex-1">
+                    <h3 className="font-semibold text-sm leading-snug text-rose-200 line-clamp-2" dangerouslySetInnerHTML={{ __html: video.snippet.title }} />
+                    <p className="text-xs text-rose-400 mt-2">{video.snippet.channelTitle}</p>
+                  </div>
+                </Card>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
