@@ -59,16 +59,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-rose-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center justify-center p-4">
       <div className="mb-8 flex items-center">
-        <BookOpen className="h-10 w-10 text-pink-500 mr-4" />
-        <span className="font-bold text-4xl text-pink-500 tracking-tight">Vidya</span>
+        <BookOpen className="h-10 w-10 text-[#F05A28] mr-4" />
+        <span className="font-bold text-4xl text-[#F05A28] tracking-tight">Vidya</span>
       </div>
 
-      <Card className="w-full max-w-md bg-rose-900 border-rose-800 text-rose-50 shadow-2xl rounded-2xl">
+      <Card className="w-full max-w-md bg-[#5A1A1A] border-[#4A1414] text-white shadow-2xl rounded-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</CardTitle>
-          <CardDescription className="text-rose-400">
+          <CardDescription className="text-gray-300">
             {mode === 'login' 
               ? 'Enter your credentials to access your dashboard.' 
               : 'Sign up to start your learning journey.'}
@@ -87,7 +87,7 @@ export default function Login() {
 
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-rose-200">Email</Label>
+              <Label htmlFor="email" className="text-gray-100">Email</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -95,18 +95,18 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-rose-950 border-rose-800 text-rose-50"
+                className="bg-[#4A1414] border-[#4A1414] text-white placeholder:text-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-rose-200">Password</Label>
+              <Label htmlFor="password" className="text-gray-100">Password</Label>
               <Input 
                 id="password" 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-rose-950 border-rose-800 text-rose-50"
+                className="bg-[#4A1414] border-[#4A1414] text-white"
               />
             </div>
 
@@ -118,18 +118,18 @@ export default function Login() {
 
             <Button 
               type="submit" 
-              className="w-full bg-pink-500 hover:bg-pink-600 text-rose-950 font-bold"
+              className="w-full bg-[#F05A28] hover:bg-[#de4c1a] text-white font-bold"
               disabled={loading || isMissingKeys}
             >
               {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Sign Up')}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-rose-400">
+          <div className="mt-6 text-center text-sm text-gray-300">
             {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
             <button 
               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              className="text-pink-500 hover:text-pink-400 font-semibold transition-colors"
+              className="text-[#F05A28] hover:text-[#de4c1a] font-semibold transition-colors"
             >
               {mode === 'login' ? 'Sign up' : 'Log in'}
             </button>
