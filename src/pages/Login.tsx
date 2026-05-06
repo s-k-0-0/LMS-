@@ -163,23 +163,7 @@ export default function Login() {
                   />
                 </div>
                 
-                {portalType === 'employee' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="role" className="text-gray-800">Employee Role</Label>
-                    <select 
-                      id="role"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="flex h-10 w-full rounded-md border bg-gray-50 px-3 py-2 text-sm text-gray-900 border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E171B] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="faculty">Faculty</option>
-                      <option value="dept_admin">Department Admin</option>
-                      <option value="dean">Dean</option>
-                      <option value="super_admin">Super Admin</option>
-                    </select>
-                  </div>
-                )}
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="usn_empId" className="text-gray-800">
                     {portalType === 'student' ? 'USN (University Seat Number)' : 'Employee ID'}
@@ -253,15 +237,17 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center text-sm text-gray-600">
-            {mode === 'login' ? "New to the platform? " : "Already registered? "}
-            <button 
-              onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              className="text-[#5E171B] hover:text-[#450F13] font-bold transition-colors underline underline-offset-4"
-            >
-              {mode === 'login' ? 'Register here' : 'Sign in here'}
-            </button>
-          </div>
+          {portalType === 'student' && (
+            <div className="mt-8 pt-6 border-t border-gray-100 text-center text-sm text-gray-600">
+              {mode === 'login' ? "New to the platform? " : "Already registered? "}
+              <button 
+                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                className="text-[#5E171B] hover:text-[#450F13] font-bold transition-colors underline underline-offset-4"
+              >
+                {mode === 'login' ? 'Register here' : 'Sign in here'}
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
