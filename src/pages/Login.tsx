@@ -10,6 +10,8 @@ import { Button } from '../components/ui/button';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [usnEmpId, setUsnEmpId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -35,12 +37,23 @@ export default function Login() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              name: name,
+              emp_usn_id: usnEmpId
+            }
+          }
         });
         if (error) throw error;
-        // Optionally show success message for confirmation email
+        
+        // Wait, supabase triggers might handle insert, but just in case, we can update it if session exists
+        if (data.user) {
+           await supabase.from('profiles').update({ name, emp_usn_id: usnEmpId }).eq('id', data.user.id);
+        }
+        
         setError('Signup successful! You can now log in.');
         setMode('login');
       } else {
@@ -59,16 +72,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9D9D9] flex flex-col items-center justify-center p-4">
-      <div className="mb-8 flex items-center">
-        <BookOpen className="h-10 w-10 text-[#F05A28] mr-4" />
-        <span className="font-bold text-4xl text-[#F05A28] tracking-tight">Vidya</span>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="mb-8 flex items-center justify-center">
+        <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-16 mix-blend-multiply" />
       </div>
 
-      <Card className="w-full max-w-md bg-[#5A1A1A] border-[#4A1414] text-white shadow-2xl rounded-2xl">
+      <Card className="w-full max-w-md bg-white border-gray-200 text-gray-900 shadow-xl rounded-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</CardTitle>
-          <CardDescription className="text-gray-300">
+          <CardDescription className="text-gray-600">
             {mode === 'login' 
               ? 'Enter your credentials to access your dashboard.' 
               : 'Sign up to start your learning journey.'}
@@ -86,8 +98,34 @@ export default function Login() {
           )}
 
           <form onSubmit={handleAuth} className="space-y-4">
+            {mode === 'signup' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-gray-800">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="Enter your full name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="usn_empId" className="text-gray-800">USN / Employee ID</Label>
+                  <Input 
+                    id="usn_empId" 
+                    placeholder="Enter your USN or Employee ID" 
+                    value={usnEmpId}
+                    onChange={(e) => setUsnEmpId(e.target.value)}
+                    required
+                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500"
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-100">Email</Label>
+              <Label htmlFor="email" className="text-gray-800">Email</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -95,18 +133,18 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-[#4A1414] border-[#4A1414] text-white placeholder:text-gray-400"
+                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-100">Password</Label>
+              <Label htmlFor="password" className="text-gray-800">Password</Label>
               <Input 
                 id="password" 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-[#4A1414] border-[#4A1414] text-white"
+                className="bg-gray-50 border-gray-200 text-gray-900"
               />
             </div>
 
@@ -118,18 +156,18 @@ export default function Login() {
 
             <Button 
               type="submit" 
-              className="w-full bg-[#F05A28] hover:bg-[#de4c1a] text-white font-bold"
+              className="w-full bg-[#5E171B] hover:bg-[#450F13] text-white font-bold"
               disabled={loading || isMissingKeys}
             >
               {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Sign Up')}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-300">
+          <div className="mt-6 text-center text-sm text-gray-600">
             {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
             <button 
               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-              className="text-[#F05A28] hover:text-[#de4c1a] font-semibold transition-colors"
+              className="text-[#5E171B] hover:text-[#450F13] font-semibold transition-colors"
             >
               {mode === 'login' ? 'Sign up' : 'Log in'}
             </button>

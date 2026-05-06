@@ -71,41 +71,41 @@ export default function ContentApprovals() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center text-gray-900">
-            <ShieldAlert className="h-6 w-6 text-[#F05A28] mr-2" />
+            <ShieldAlert className="h-6 w-6 text-[#5E171B] mr-2" />
             Content Verification
           </h1>
           <p className="text-sm text-gray-700">Approve or reject courses and content submitted by faculty.</p>
         </div>
       </div>
 
-      <div className="border border-[#4A1414] rounded-2xl bg-[#5A1A1A] overflow-hidden shadow-none">
+      <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-none">
         <Table>
-          <TableHeader className="bg-[#4A1414]/30 border-b border-[#4A1414]">
+          <TableHeader className="bg-gray-50/30 border-b border-gray-200">
             <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6">Content</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Author</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Status</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 text-right px-6">Actions</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12 px-6">Content</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12">Author</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12">Status</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12 text-right px-6">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-gray-300">Loading pending content...</TableCell>
+                <TableCell colSpan={4} className="text-center py-8 text-gray-600">Loading pending content...</TableCell>
               </TableRow>
             ) : courses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-gray-300">No content pending your review.</TableCell>
+                <TableCell colSpan={4} className="text-center py-8 text-gray-600">No content pending your review.</TableCell>
               </TableRow>
             ) : courses.map((course) => (
-              <TableRow key={course.id} className="border-b border-[#4A1414]/50 hover:bg-[#4A1414]/30 transition-colors">
-                <TableCell className="px-6 py-4 font-medium text-gray-200">
+              <TableRow key={course.id} className="border-b border-gray-200/50 hover:bg-gray-50/30 transition-colors">
+                <TableCell className="px-6 py-4 font-medium text-gray-700">
                   <div className="flex items-center">
-                    <BookOpen className="h-5 w-5 text-[#F05A28] mr-3" />
+                    <BookOpen className="h-5 w-5 text-[#5E171B] mr-3" />
                     {course.title}
                   </div>
                 </TableCell>
-                <TableCell className="py-4 text-gray-300 text-sm">
+                <TableCell className="py-4 text-gray-600 text-sm">
                    {course.profiles?.name || course.profiles?.email || 'Unknown'}
                 </TableCell>
                 <TableCell className="py-4">
@@ -115,10 +115,10 @@ export default function ContentApprovals() {
                 </TableCell>
                 <TableCell className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(course.id, course.status)}>
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-gray-900" onClick={() => handleApprove(course.id, course.status)}>
                       <CheckCircle className="h-4 w-4 mr-1" /> Approve
                     </Button>
-                    <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleReject(course.id)}>
+                    <Button size="sm" className="bg-red-600 hover:bg-red-700 text-gray-900" onClick={() => handleReject(course.id)}>
                       <XCircle className="h-4 w-4 mr-1" /> Reject
                     </Button>
                   </div>

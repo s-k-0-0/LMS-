@@ -31,7 +31,7 @@ export const updateStreak = async (userId: string, currentStreak: number, lastLo
 
 export function StreakWidget({ streak = 0 }: { streak: number }) {
   return (
-    <div className="flex items-center space-x-2 bg-[#F05A28]/10 border border-[#F05A28]/30 rounded-full px-3 py-1.5 shadow-sm text-sm font-semibold text-[#F05A28]">
+    <div className="flex items-center space-x-2 bg-[#5E171B]/10 border border-[#5E171B]/30 rounded-full px-3 py-1.5 shadow-sm text-sm font-semibold text-[#5E171B]">
       <span className="text-base leading-none">🔥</span>
       <span>{streak}</span>
       <span className="uppercase tracking-wider">Day Streak</span>

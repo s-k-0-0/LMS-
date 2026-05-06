@@ -35,7 +35,12 @@ export function Layout() {
   }, [profile]);
 
   if (loading) {
-    return <div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-[#F05A28]">Loading Vidya...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-16 mix-blend-multiply mb-4" />
+        <div className="text-[#5E171B] font-medium">Loading LMS...</div>
+      </div>
+    );
   }
 
   // Allow access for testing if not auth'd yet
@@ -79,12 +84,11 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#D9D9D9] text-gray-900 font-sans overflow-hidden">
+    <div className="flex h-screen bg-gray-50 text-gray-900 font-sans overflow-hidden">
       {/* Sidebar */}
-      <div className="w-[240px] bg-[#5A1A1A] border-r border-[#4A1414] flex flex-col hidden md:flex text-white">
-        <div className="h-20 flex items-center px-6">
-          <BookOpen className="h-6 w-6 text-[#F05A28] mr-3" />
-          <span className="font-bold text-2xl text-[#F05A28] tracking-tight">Vidya</span>
+      <div className="w-[240px] bg-white border-r border-gray-200 flex flex-col hidden md:flex text-gray-900">
+        <div className="h-20 flex items-center px-6 border-b border-gray-100">
+          <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-10 mix-blend-multiply" />
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-2">
@@ -97,11 +101,11 @@ export function Layout() {
                 to={item.href}
                 className={`flex items-center px-4 py-2.5 text-sm rounded-lg transition-all ${
                   isActive 
-                    ? 'bg-[#F05A28]/20 text-[#F05A28] font-semibold' 
-                    : 'text-gray-300 hover:text-white hover:bg-[#4A1414]/50'
+                    ? 'bg-[#5E171B]/20 text-[#5E171B] font-semibold' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50/50'
                 }`}
               >
-                <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-[#F05A28]' : 'text-gray-300'}`} />
+                <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-[#5E171B]' : 'text-gray-600'}`} />
                 {item.name}
               </NavLink>
             );
@@ -109,7 +113,7 @@ export function Layout() {
         </nav>
 
         <div className="p-4 flex flex-col gap-2">
-          <div onClick={() => setIsSettingsOpen(true)} className="flex items-center px-4 py-2.5 text-sm rounded-lg text-gray-300 hover:text-white hover:bg-[#4A1414]/50 cursor-pointer">
+          <div onClick={() => setIsSettingsOpen(true)} className="flex items-center px-4 py-2.5 text-sm rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50/50 cursor-pointer">
             <Settings className="h-5 w-5 mr-3" />
             Profile Settings
           </div>
@@ -122,74 +126,75 @@ export function Layout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-[#5A1A1A] border-b border-[#4A1414] flex items-center justify-between px-6 md:hidden text-white">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 md:hidden text-gray-900">
           <div className="flex items-center">
-            <BookOpen className="h-6 w-6 text-[#F05A28] mr-2" />
-            <span className="font-bold text-xl text-[#F05A28]">Vidya</span>
+            <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-8 mix-blend-multiply" />
           </div>
-          <button onClick={() => setIsSettingsOpen(true)} className="text-gray-300 hover:text-white">
+          <button onClick={() => setIsSettingsOpen(true)} className="text-gray-600 hover:text-gray-900">
             <Settings className="h-6 w-6" />
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#D9D9D9]">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
           <Outlet />
         </main>
       </div>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="bg-[#5A1A1A] border-[#4A1414] text-white sm:max-w-[425px]">
+        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Profile Settings</DialogTitle>
-            <DialogDescription className="text-gray-300">
+            <DialogDescription className="text-gray-600">
               View and manage your account details. Contact super admin to change roles.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name" className="text-gray-200">Full Name</Label>
+              <Label htmlFor="name" className="text-gray-700">Full Name</Label>
               <Input
                 id="name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
                 placeholder="Enter your full name"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="emp_usn" className="text-gray-200">USN / Employee ID</Label>
+              <Label htmlFor="emp_usn" className="text-gray-700">
+                {profile?.role === 'student' ? 'USN (University Seat Number)' : 'Employee ID'}
+              </Label>
               <Input
                 id="emp_usn"
                 value={editEmpId}
                 onChange={(e) => setEditEmpId(e.target.value)}
-                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
-                placeholder="Enter your USN or Employee ID"
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
+                placeholder={profile?.role === 'student' ? "Enter your USN" : "Enter your Employee ID"}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-gray-200">Email Address</Label>
+              <Label htmlFor="email" className="text-gray-700">Email Address</Label>
               <Input
                 id="email"
                 defaultValue={profile?.email || ''}
-                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
                 disabled
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="role" className="text-gray-200">Current Role</Label>
+              <Label htmlFor="role" className="text-gray-700">Current Role</Label>
               <Input
                 id="role"
                 defaultValue={profile?.role?.replace('_', ' ') || ''}
-                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white capitalize"
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900 capitalize"
                 disabled
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="dept" className="text-gray-200">Department</Label>
+              <Label htmlFor="dept" className="text-gray-700">Department</Label>
               <Input
                 id="dept"
                 defaultValue={profile?.departments?.name || 'Not assigned'}
-                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
                 disabled
               />
             </div>
@@ -198,7 +203,7 @@ export function Layout() {
             <Button variant="outline" className="text-gray-900" onClick={() => setIsSettingsOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-[#F05A28] hover:bg-[#de4c1a] text-white" onClick={handleSaveProfile} disabled={isSaving}>
+            <Button className="bg-[#5E171B] hover:bg-[#450F13] text-white" onClick={handleSaveProfile} disabled={isSaving}>
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
@@ -213,7 +218,7 @@ export function ProtectedRoute({ children, allowedRoles }: { children: React.Rea
   const { hasRole, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (loading) return <div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-[#F05A28]">Authenticating...</div>;
+  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-[#5E171B]">Authenticating...</div>;
 
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} />;
   if (!hasRole(allowedRoles)) {

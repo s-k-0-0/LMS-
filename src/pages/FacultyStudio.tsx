@@ -117,10 +117,10 @@ export default function FacultyStudio() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 bg-[#5A1A1A] border-[#4A1414] text-white shadow-none rounded-2xl">
+        <Card className="md:col-span-2 bg-white border-gray-200 text-gray-900 shadow-none rounded-2xl">
           <CardHeader>
             <CardTitle>Submit New Content</CardTitle>
-            <CardDescription className="text-gray-300">Add course modules or upskilling content for your students</CardDescription>
+            <CardDescription className="text-gray-600">Add course modules or upskilling content for your students</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpload} className="space-y-6">
@@ -134,12 +134,12 @@ export default function FacultyStudio() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contentTypeSelection" className="text-gray-200">Format</Label>
+                  <Label htmlFor="contentTypeSelection" className="text-gray-700">Format</Label>
                   <Select value={contentTypeSelection} onValueChange={setContentTypeSelection}>
-                    <SelectTrigger className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900 rounded-lg">
                       <SelectValue placeholder="Select Format" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#5A1A1A] border-[#4A1414] text-gray-100">
+                    <SelectContent className="bg-white border-gray-200 text-gray-800">
                       <SelectItem value="course">Standard Course</SelectItem>
                       <SelectItem value="upskilling">Upskilling / Dashboard Content</SelectItem>
                     </SelectContent>
@@ -147,12 +147,12 @@ export default function FacultyStudio() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-gray-200">Category Tag</Label>
+                  <Label htmlFor="category" className="text-gray-700">Category Tag</Label>
                   <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900 rounded-lg">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#5A1A1A] border-[#4A1414] text-gray-100">
+                    <SelectContent className="bg-white border-gray-200 text-gray-800">
                       <SelectItem value="core">Core Course</SelectItem>
                       <SelectItem value="technical">Technical / Coding</SelectItem>
                       <SelectItem value="soft_skills">Soft Skills</SelectItem>
@@ -164,73 +164,73 @@ export default function FacultyStudio() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-gray-200">Content Title</Label>
+                <Label htmlFor="title" className="text-gray-700">Content Title</Label>
                 <Input 
                   id="title" 
                   value={title} 
                   onChange={e => setTitle(e.target.value)} 
                   required 
-                  className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg"
+                  className="bg-gray-50 border-gray-200 text-gray-900 rounded-lg"
                   placeholder="e.g. Introduction to Advanced Data Structures"
                 />
               </div>
               
               {category === 'technical' && contentTypeSelection === 'course' && (
                 <div className="space-y-2">
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-200 cursor-pointer p-3 bg-[#4A1414] rounded-lg border border-[#3A1010]">
+                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <input 
                       type="checkbox" 
                       checked={isCompilerEnabled}
                       onChange={(e) => setIsCompilerEnabled(e.target.checked)}
-                      className="rounded border-[#F05A28] text-[#F05A28] shadow-sm focus:ring-[#F05A28] focus:ring-offset-0 bg-[#3A1010]"
+                      className="rounded border-[#5E171B] text-[#5E171B] shadow-sm focus:ring-[#5E171B] focus:ring-offset-0 bg-white"
                     />
-                    <span className="flex items-center"><Code className="h-4 w-4 mr-2 text-[#F05A28]" /> Enable Code Workspace for this Course</span>
+                    <span className="flex items-center"><Code className="h-4 w-4 mr-2 text-[#5E171B]" /> Enable Code Workspace for this Course</span>
                   </label>
                 </div>
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="desc" className="text-gray-200">Description</Label>
+                <Label htmlFor="desc" className="text-gray-700">Description</Label>
                 <Textarea 
                   id="desc" 
                   value={desc} 
                   onChange={e => setDesc(e.target.value)} 
-                  className="bg-[#4A1414] border-[#4A1414] h-24 text-white rounded-lg"
+                  className="bg-gray-50 border-gray-200 h-24 text-gray-900 rounded-lg"
                   placeholder="What will students learn?"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="youtubeUrl" className="text-gray-200">YouTube Video / Playlist URL</Label>
+                <Label htmlFor="youtubeUrl" className="text-gray-700">YouTube Video / Playlist URL</Label>
                 <Input 
                   id="youtubeUrl" 
                   value={youtubeUrl} 
                   onChange={e => setYoutubeUrl(e.target.value)} 
                   required
-                  className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg"
+                  className="bg-gray-50 border-gray-200 text-gray-900 rounded-lg"
                   placeholder="https://www.youtube.com/watch?v=..."
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="resourceLink" className="text-gray-200">Additional Resource URL (Optional)</Label>
+                <Label htmlFor="resourceLink" className="text-gray-700">Additional Resource URL (Optional)</Label>
                 <Input 
                   id="resourceLink" 
                   value={resourceLink} 
                   onChange={e => setResourceLink(e.target.value)} 
-                  className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg"
+                  className="bg-gray-50 border-gray-200 text-gray-900 rounded-lg"
                   placeholder="Link to Google Drive, PDF, Notion, etc."
                 />
               </div>
 
               {uploaded && (
-                 <div className="p-4 bg-[#F05A28]/20 border border-[#F05A28] text-[#F05A28] rounded-lg flex items-center">
+                 <div className="p-4 bg-[#5E171B]/20 border border-[#5E171B] text-[#5E171B] rounded-lg flex items-center">
                     <CheckCircle2 className="h-5 w-5 mr-3 shrink-0" />
                     <span className="text-sm font-medium">Content submitted for approval!</span>
                  </div>
               )}
 
-              <Button type="submit" disabled={isUploading || !title} className="w-full bg-[#F05A28] hover:bg-[#de4c1a] text-white font-semibold rounded-lg">
+              <Button type="submit" disabled={isUploading || !title} className="w-full bg-[#5E171B] hover:bg-[#450F13] text-white font-semibold rounded-lg">
                 {isUploading ? 'Submitting...' : 'Submit Content'}
               </Button>
             </form>
@@ -238,13 +238,13 @@ export default function FacultyStudio() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="bg-[#5A1A1A] border-[#4A1414] text-white shadow-none rounded-2xl">
-            <CardHeader className="pb-4 border-b border-[#4A1414]/50">
-              <CardTitle className="text-sm font-bold flex items-center text-gray-200">
-                 <LayoutDashboard className="h-4 w-4 mr-2 text-[#F05A28]" /> What happens next?
+          <Card className="bg-white border-gray-200 text-gray-900 shadow-none rounded-2xl">
+            <CardHeader className="pb-4 border-b border-gray-200/50">
+              <CardTitle className="text-sm font-bold flex items-center text-gray-700">
+                 <LayoutDashboard className="h-4 w-4 mr-2 text-[#5E171B]" /> What happens next?
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 text-sm text-gray-300 space-y-3">
+            <CardContent className="pt-4 text-sm text-gray-600 space-y-3">
                <p>1. Your content is queued as <strong>Pending Verification</strong>.</p>
                <p>2. The <strong>Department Admin</strong> will review your upload.</p>
                <p>3. If it requires Dean approval, it will be forwarded. Otherwise it is approved directly.</p>

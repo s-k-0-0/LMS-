@@ -82,12 +82,12 @@ export default function VideoPlayer() {
     if (lesson) trackProgress(lesson.id, lesson.course_id, 'completed');
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center text-center bg-[#D9D9D9]">Loading player...</div>;
+  if (loading) return <div className="flex h-screen items-center justify-center text-center bg-gray-50">Loading player...</div>;
   if (!lesson) return (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-[#D9D9D9] h-64 rounded-xl border border-gray-300 mx-auto mt-10 max-w-2xl">
+    <div className="flex flex-col items-center justify-center p-12 text-center bg-gray-50 h-64 rounded-xl border border-gray-300 mx-auto mt-10 max-w-2xl">
       <h2 className="text-xl font-bold mb-2">No Video Available</h2>
       <p className="text-gray-600 mb-6">This course is empty or the video is still processing.</p>
-      <Link to="/courses" className="text-[#F05A28] font-semibold hover:underline">Return to Courses</Link>
+      <Link to="/courses" className="text-[#5E171B] font-semibold hover:underline">Return to Courses</Link>
     </div>
   );
 
@@ -101,7 +101,7 @@ export default function VideoPlayer() {
   return (
     <div className="max-w-4xl mx-auto py-6">
       <div className="flex items-center justify-between mb-6">
-        <Link to="/courses" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-[#F05A28] transition-colors">
+        <Link to="/courses" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-[#5E171B] transition-colors">
            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
         </Link>
         {progressMarked ? (
@@ -111,7 +111,7 @@ export default function VideoPlayer() {
         ) : (
           <button 
             onClick={markComplete}
-            className="text-sm font-medium bg-[#F05A28] hover:bg-[#de4c1a] text-white px-3 py-1.5 rounded-lg transition-colors"
+            className="text-sm font-medium bg-[#5E171B] hover:bg-[#450F13] text-white px-3 py-1.5 rounded-lg transition-colors"
           >
             Mark as Complete
           </button>
@@ -121,12 +121,12 @@ export default function VideoPlayer() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight mb-2 text-gray-900">{lesson.title}</h1>
         <p className="text-gray-700 flex items-center font-medium">
-           <span className="bg-[#5A1A1A] text-white px-2.5 py-1 rounded text-xs font-semibold mr-3">Lesson</span>
+           <span className="bg-white text-gray-900 px-2.5 py-1 rounded text-xs font-semibold mr-3">Lesson</span>
            {lesson.courses?.title || 'Unknown Course'}
         </p>
       </div>
 
-      <div className="rounded-2xl overflow-hidden border border-[#4A1414] bg-black aspect-video relative shadow-none">
+      <div className="rounded-2xl overflow-hidden border border-gray-200 bg-black aspect-video relative shadow-none">
          <iframe
             src={videoSrc}
             style={{border: 'none', position: 'absolute', top: 0, left: 0, height: '100%', width: '100%'}}
@@ -144,21 +144,21 @@ export default function VideoPlayer() {
             </p>
          </div>
          <div>
-            <Card className="bg-[#5A1A1A] border-[#4A1414] shadow-none rounded-2xl text-white">
+            <Card className="bg-white border-gray-200 shadow-none rounded-2xl text-gray-900">
                <CardContent className="p-5">
-                  <h4 className="font-semibold text-xs uppercase tracking-widest text-[#F05A28] mb-4">Resources</h4>
+                  <h4 className="font-semibold text-xs uppercase tracking-widest text-[#5E171B] mb-4">Resources</h4>
                   <ul className="space-y-4">
                      {lesson.external_url && (
                      <li>
-                        <a href={lesson.external_url} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm font-medium text-gray-200 hover:text-[#F05A28] transition-colors">
-                           <FileText className="h-4 w-4 mr-3 text-[#F05A28]" /> External Resource
+                        <a href={lesson.external_url} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm font-medium text-gray-700 hover:text-[#5E171B] transition-colors">
+                           <FileText className="h-4 w-4 mr-3 text-[#5E171B]" /> External Resource
                         </a>
                      </li>
                      )}
                      {lesson.courses?.is_compiler_enabled && (
                      <li>
-                        <Link to="/compiler" className="flex items-center text-sm font-medium text-gray-200 hover:text-[#F05A28] transition-colors">
-                           <PlayCircle className="h-4 w-4 mr-3 text-[#F05A28]" /> Practice Workspace
+                        <Link to="/compiler" className="flex items-center text-sm font-medium text-gray-700 hover:text-[#5E171B] transition-colors">
+                           <PlayCircle className="h-4 w-4 mr-3 text-[#5E171B]" /> Practice Workspace
                         </Link>
                      </li>
                      )}

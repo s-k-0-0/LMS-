@@ -66,7 +66,7 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-wrap items-center gap-5 justify-end">
           <StreakWidget streak={profile?.streak_count || 0} />
-          <div className="w-10 h-10 rounded-full bg-[#F05A28] flex items-center justify-center font-bold text-white border-2 border-[#4A1414] shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#5E171B] flex items-center justify-center font-bold text-white border-2 border-gray-200 shrink-0">
              {profile?.name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
         </div>
@@ -75,30 +75,30 @@ export default function Dashboard() {
       <div className="mt-2">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-widest">Available Courses</h2>
-          <Link to="/courses" className="text-xs text-[#F05A28] hover:text-[#de4c1a] font-semibold">View All Courses</Link>
+          <Link to="/courses" className="text-xs text-[#5E171B] hover:text-[#450F13] font-semibold">View All Courses</Link>
         </div>
         
         {standardCourses.length === 0 ? (
-          <div className="text-center py-12 bg-[#5A1A1A] rounded-2xl border border-[#4A1414] text-gray-300">
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-600">
             <p>No courses available for you right now.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
              {standardCourses.map(course => (
                <Link to={`/courses/${course.id}`} key={course.id}>
-                 <Card className="bg-[#5A1A1A] border-[#4A1414] text-white overflow-hidden rounded-2xl hover:border-[#F05A28]/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
-                    <div className="h-32 overflow-hidden w-full bg-[#4A1414] flex items-center justify-center relative">
-                       <BookOpen className={`h-10 w-10 ${course.is_mandatory ? 'text-yellow-400' : 'text-gray-400'}`} />
-                       <div className={`absolute top-3 left-3 bg-[#1A1A1A]/80 px-2 py-1 rounded text-[10px] font-semibold tracking-wider uppercase border border-[#4A1414] ${course.is_mandatory ? 'text-yellow-400' : 'text-[#F05A28]'}`}>
+                 <Card className="bg-white border-gray-200 text-gray-900 overflow-hidden rounded-2xl hover:border-[#5E171B]/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
+                    <div className="h-32 overflow-hidden w-full bg-gray-50 flex items-center justify-center relative">
+                       <BookOpen className={`h-10 w-10 ${course.is_mandatory ? 'text-yellow-600' : 'text-gray-500'}`} />
+                       <div className={`absolute top-3 left-3 bg-white px-2 py-1 rounded text-[10px] font-semibold tracking-wider uppercase border border-gray-200 ${course.is_mandatory ? 'text-yellow-600' : 'text-[#5E171B]'}`}>
                          {course.is_mandatory ? 'Mandatory' : course.category || 'Course'}
                        </div>
                     </div>
                     <div className="p-5 flex-1 flex flex-col justify-between">
                        <div>
-                         <h3 className="font-semibold text-sm leading-snug text-gray-100">{course.title}</h3>
-                         <p className="text-xs text-gray-300 mt-2 line-clamp-2">{course.description}</p>
+                         <h3 className="font-semibold text-sm leading-snug text-gray-800">{course.title}</h3>
+                         <p className="text-xs text-gray-600 mt-2 line-clamp-2">{course.description}</p>
                        </div>
-                       <div className="mt-4 pt-4 border-t border-[#4A1414]/50 flex justify-between items-center text-xs text-gray-400">
+                       <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-between items-center text-xs text-gray-500">
                           <span>By {course.profiles?.name || 'Faculty'}</span>
                           <span className={`${course.status === 'published' ? 'text-green-500' : 'text-yellow-500'}`}>{course.status}</span>
                        </div>
@@ -120,17 +120,17 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
              {dashboardContent.map(content => (
                <Link to={`/courses/${content.id}`} key={content.id}>
-                 <Card className="bg-[#5A1A1A] border-[#4A1414] text-white overflow-hidden rounded-2xl hover:border-[#F05A28]/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
-                    <div className="h-32 overflow-hidden w-full bg-[#2A0C0C] flex items-center justify-center relative">
-                       <Video className="h-10 w-10 text-[#F05A28]/60" />
-                       <div className="absolute top-3 left-3 bg-[#1A1A1A]/80 px-2 py-1 rounded text-[10px] font-semibold tracking-wider text-purple-400 uppercase border border-[#4A1414]">Upskilling</div>
+                 <Card className="bg-white border-gray-200 text-gray-900 overflow-hidden rounded-2xl hover:border-[#5E171B]/50 transition-colors cursor-pointer !p-0 shadow-none h-full flex flex-col">
+                    <div className="h-32 overflow-hidden w-full bg-blue-50 flex items-center justify-center relative">
+                       <Video className="h-10 w-10 text-[#5E171B]/60" />
+                       <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded text-[10px] font-semibold tracking-wider text-blue-600 uppercase border border-gray-200">Upskilling</div>
                     </div>
                     <div className="p-5 flex-1 flex flex-col justify-between">
                        <div>
-                         <h3 className="font-semibold text-sm leading-snug text-gray-100">{content.title}</h3>
-                         <p className="text-xs text-gray-300 mt-2 line-clamp-2">{content.description}</p>
+                         <h3 className="font-semibold text-sm leading-snug text-gray-800">{content.title}</h3>
+                         <p className="text-xs text-gray-600 mt-2 line-clamp-2">{content.description}</p>
                        </div>
-                       <div className="mt-4 pt-4 border-t border-[#4A1414]/50 flex justify-between items-center text-xs text-gray-400">
+                       <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-between items-center text-xs text-gray-500">
                           <span>By {content.profiles?.name || 'Faculty'}</span>
                        </div>
                     </div>

@@ -161,43 +161,43 @@ export default function UsersPanel() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center text-gray-900">
-            <ShieldAlert className="h-6 w-6 text-[#F05A28] mr-2" />
+            <ShieldAlert className="h-6 w-6 text-[#5E171B] mr-2" />
             Users Management Panel
           </h1>
           <p className="text-sm text-gray-700">Manage user roles, departments, and system access.</p>
         </div>
       </div>
 
-      <div className="border border-[#4A1414] rounded-2xl bg-[#5A1A1A] overflow-hidden shadow-none">
+      <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-none">
         <Table>
-          <TableHeader className="bg-[#4A1414]/30 border-b border-[#4A1414]">
+          <TableHeader className="bg-gray-50/30 border-b border-gray-200">
             <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6">User</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Department</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Current Role</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 text-center">Manage</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6 text-right">Role Action</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12 px-6">User</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12">Department</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12">Current Role</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12 text-center">Manage</TableHead>
+              <TableHead className="text-gray-600 font-semibold text-xs tracking-wider uppercase h-12 px-6 text-right">Role Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-300">Loading users...</TableCell>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-600">Loading users...</TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-300">No users found.</TableCell>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-600">No users found.</TableCell>
               </TableRow>
             ) : users.map((user) => (
-              <TableRow key={user.id} className="border-b border-[#4A1414]/50 hover:bg-[#4A1414]/30 transition-colors">
-                <TableCell className="px-6 py-4 font-medium text-gray-200">
+              <TableRow key={user.id} className="border-b border-gray-200/50 hover:bg-gray-50/30 transition-colors">
+                <TableCell className="px-6 py-4 font-medium text-gray-700">
                   <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-[#4A1414] text-[#F05A28] flex items-center justify-center mr-3 shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gray-50 text-[#5E171B] flex items-center justify-center mr-3 shrink-0">
                       <UserCog className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-semibold">{user.name || 'Unnamed User'}</span>
-                      <span className="text-xs text-gray-400 font-normal">{user.email}</span>
+                      <span className="text-xs text-gray-500 font-normal">{user.email}</span>
                     </div>
                   </div>
                 </TableCell>
@@ -207,10 +207,10 @@ export default function UsersPanel() {
                     onValueChange={(val) => handleDeptChange(user.id, val)}
                     disabled={!canEditUser(user)}
                   >
-                    <SelectTrigger className="w-[200px] bg-[#4A1414] border-[#4A1414] text-gray-200 h-9 rounded-lg text-xs truncate">
+                    <SelectTrigger className="w-[200px] bg-gray-50 border-gray-200 text-gray-700 h-9 rounded-lg text-xs truncate">
                       <SelectValue placeholder="Select dept" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#5A1A1A] border-[#4A1414] text-gray-100 max-h-[300px]">
+                    <SelectContent className="bg-white border-gray-200 text-gray-800 max-h-[300px]">
                       <SelectItem value="none">None</SelectItem>
                       {departments.map(d => (
                         <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
@@ -224,7 +224,7 @@ export default function UsersPanel() {
                         user.role === 'dean' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 
                         user.role === 'dept_admin' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 
                         user.role === 'faculty' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 
-                        'bg-[#4A1414]/50 text-gray-200 border border-[#4A1414]'}`}>
+                        'bg-gray-50/50 text-gray-700 border border-gray-200'}`}>
                       {user.role.replace('_', ' ')}
                    </span>
                 </TableCell>
@@ -234,7 +234,7 @@ export default function UsersPanel() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => openManageStudents(user)}
-                      className="bg-[#4A1414] border-[#4A1414] hover:bg-[#5A1A1A] text-gray-200 text-xs h-8"
+                      className="bg-gray-50 border-gray-200 hover:bg-white text-gray-700 text-xs h-8"
                     >
                       <Users className="h-3 w-3 mr-1" /> Assign Students
                     </Button>
@@ -246,10 +246,10 @@ export default function UsersPanel() {
                     onValueChange={(val) => handleRoleChange(user.id, val as UserRole)}
                     disabled={!canEditUser(user)}
                   >
-                    <SelectTrigger className="w-[140px] ml-auto bg-[#4A1414] border-[#4A1414] text-gray-200 h-9 rounded-lg">
+                    <SelectTrigger className="w-[140px] ml-auto bg-gray-50 border-gray-200 text-gray-700 h-9 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#5A1A1A] border-[#4A1414] text-gray-100">
+                    <SelectContent className="bg-white border-gray-200 text-gray-800">
                       {availableRoles.includes('student') && <SelectItem value="student">Student</SelectItem>}
                       {availableRoles.includes('faculty') && <SelectItem value="faculty">Faculty</SelectItem>}
                       {availableRoles.includes('dept_admin') && <SelectItem value="dept_admin">Dept Admin</SelectItem>}
@@ -265,30 +265,30 @@ export default function UsersPanel() {
       </div>
 
       <Dialog open={manageFacultyOpen} onOpenChange={setManageFacultyOpen}>
-        <DialogContent className="bg-[#5A1A1A] border-[#4A1414] text-white sm:max-w-[450px]">
+        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle className="text-xl">Assigned Students</DialogTitle>
           </DialogHeader>
-          <div className="py-2 text-sm text-gray-300">
+          <div className="py-2 text-sm text-gray-600">
             Select the students who will be assigned to <strong>{selectedFaculty?.name || 'this faculty'}</strong>. Only these students will be able to view their uploaded courses.
           </div>
           
-          <div className="border border-[#4A1414] rounded-lg max-h-[300px] overflow-y-auto bg-[#3A1010]">
+          <div className="border border-gray-200 rounded-lg max-h-[300px] overflow-y-auto bg-white">
              {deptStudents.length === 0 ? (
-                <div className="p-4 text-center text-gray-400 text-sm">No students found in this department.</div>
+                <div className="p-4 text-center text-gray-500 text-sm">No students found in this department.</div>
              ) : (
                 <div className="divide-y divide-[#4A1414]">
                   {deptStudents.map(student => (
-                    <label key={student.id} className="flex items-center p-3 hover:bg-[#4A1414] cursor-pointer">
+                    <label key={student.id} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer">
                       <input 
                         type="checkbox" 
                         checked={assignedStudentIds.includes(student.id)}
                         onChange={() => toggleStudent(student.id)}
-                        className="rounded border-[#F05A28] text-[#F05A28] shadow-sm focus:ring-[#F05A28] bg-[#1A0A0A] mr-3"
+                        className="rounded border-[#5E171B] text-[#5E171B] shadow-sm focus:ring-[#5E171B] bg-[#1A0A0A] mr-3"
                       />
                       <div className="flex flex-col">
-                        <span className="font-semibold text-gray-200 text-sm">{student.name || 'Unnamed Student'}</span>
-                        <span className="text-xs text-gray-400">{student.email}</span>
+                        <span className="font-semibold text-gray-700 text-sm">{student.name || 'Unnamed Student'}</span>
+                        <span className="text-xs text-gray-500">{student.email}</span>
                       </div>
                     </label>
                   ))}
@@ -300,7 +300,7 @@ export default function UsersPanel() {
             <Button variant="outline" className="text-gray-900" onClick={() => setManageFacultyOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-[#F05A28] hover:bg-[#de4c1a] text-white" onClick={saveAssignments} disabled={isSavingStudents}>
+            <Button className="bg-[#5E171B] hover:bg-[#450F13] text-white" onClick={saveAssignments} disabled={isSavingStudents}>
               {isSavingStudents ? 'Saving...' : 'Save Assignments'}
             </Button>
           </div>
