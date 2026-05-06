@@ -2,17 +2,37 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { Card, CardContent } from '../components/ui/card';
-import { PlayCircle, Video, Code, BookOpen } from 'lucide-react';
+import { PlayCircle, Video, Code, BookOpen, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Courses() {
   const { profile } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [filterCategory, setFilterDept] = useState<string>('all');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchCourses();
+    fetchDepartments();
   }, [profile]);
+  
+  const fetchDepartments = async () => {
+    const { data } = await supabase.from('departments').select('*');
+    if (data) setDepartments(data);
+  };
+  
+  const handleDelete = async (e: any, courseId: string) => {
+    e.preventDefault();
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    setIsDeleting(courseId);
+    await supabase.from('courses').delete().eq('id', courseId);
+    setIsDeleting(null);
+    fetchCourses();
+  };
+
 
   const fetchCourses = async () => {
     if (!profile) return;
@@ -57,9 +77,14 @@ export default function Courses() {
     }
   };
 
+  
+  const coursesToRender = filterCategory === 'all' 
+    ? courses 
+    : courses.filter(c => c.category === filterCategory);
+    
   return (
     <div className="max-w-6xl mx-auto py-6">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center mb-2">
             <BookOpen className="h-8 w-8 text-[#5E171B] mr-3" />
@@ -67,18 +92,38 @@ export default function Courses() {
           </h1>
           <p className="text-gray-700">Explore courses assigned to your department, upskilling modules, and mandatory tasks.</p>
         </div>
+        <div className="flex gap-3">
+          <select 
+            value={filterCategory} 
+            onChange={e => setFilterDept(e.target.value)}
+            className="border-gray-200 text-gray-900 bg-white rounded-md px-3 py-2 text-sm shadow-sm"
+          >
+            <option value="all">All Categories</option>
+            
+              <option value="core">Core Course</option>
+              <option value="technical">Technical / Coding</option>
+              <option value="soft_skills">Soft Skills</option>
+              <option value="aptitude">Aptitude</option>
+              <option value="other">Other</option>
+            </select>
+          {['super_admin', 'dean', 'dept_admin', 'faculty'].includes(profile?.role) && (
+            <Link to="/studio" className="bg-[#5E171B] hover:bg-[#450F13] text-white px-4 py-2 rounded-md font-medium flex items-center shadow-sm">
+              <Plus className="w-4 h-4 mr-2" /> Add Video / Course
+            </Link>
+          )}
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-10 text-gray-500">Loading courses...</div>
-      ) : courses.length === 0 ? (
+      ) : coursesToRender.length === 0 ? (
         <div className="text-center py-12 text-gray-500 bg-white rounded-xl">
           <BookOpen className="mx-auto h-12 w-12 text-gray-600 mb-4" />
           <p>No courses available right now.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map(course => (
+          {coursesToRender.map(course => (
             <Card key={course.id} className="bg-white border-gray-200 text-gray-900 overflow-hidden rounded-2xl flex flex-col group cursor-pointer hover:border-[#5E171B]/50 transition-colors shadow-none !p-0">
               <div className={`h-40 overflow-hidden w-full relative ${course.content_type === 'upskilling' && !course.is_mandatory ? 'bg-blue-50' : 'bg-gray-50'}`}>
                 {course.thumbnail_url ? (
@@ -111,9 +156,17 @@ export default function Courses() {
                 
                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-200">
                   <span className="text-xs text-gray-500 font-medium">By {course.profiles?.name || 'Faculty'}</span>
-                  <Link to={`/courses/${course.id}`} className="text-xs font-bold text-[#5E171B] group-hover:text-[#450F13] flex items-center">
+                  
+                    <div className="flex items-center gap-3">
+                      {['super_admin', 'dean', 'dept_admin'].includes(profile?.role) && (
+                        <button onClick={(e) => handleDelete(e, course.id)} className="text-red-500 hover:bg-red-50 p-1 rounded transition-colors z-10" disabled={isDeleting === course.id}>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <Link to={`/courses/${course.id}`} className="text-xs font-bold text-[#5E171B] group-hover:text-[#450F13] flex items-center">
                     Enter <PlayCircle className="h-4 w-4 ml-1" />
-                  </Link>
+                      </Link>
+                    </div>
                 </div>
               </div>
             </Card>

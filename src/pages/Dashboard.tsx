@@ -1,7 +1,7 @@
 import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent } from '../components/ui/card';
 import { StreakWidget } from '../components/widgets/StreakWidget';
-import { BookOpen, Star, PlayCircle, Video } from 'lucide-react';
+import { BookOpen, Star, PlayCircle, Video, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,10 @@ import { supabase } from '../lib/supabase';
 export default function Dashboard() {
   const { profile } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [filterCategory, setFilterDept] = useState<string>('all');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -47,11 +51,32 @@ export default function Dashboard() {
     
     if (profile) {
       fetchCourses();
+      fetchDepartments();
     }
   }, [profile]);
+  
+  const fetchDepartments = async () => {
+    const { data } = await supabase.from('departments').select('*');
+    if (data) setDepartments(data);
+  };
+  
+  const handleDelete = async (e: any, courseId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    setIsDeleting(courseId);
+    await supabase.from('courses').delete().eq('id', courseId);
+    setIsDeleting(null);
+    setCourses(prev => prev.filter(c => c.id !== courseId));
+  };
+  
+  const filterCoursesByDept = (items: any[]) => {
+    if (filterCategory === 'all') return items;
+    return items.filter(c => c.category === filterCategory);
+  };
 
-  const standardCourses = courses.filter(c => c.content_type === 'course' || !c.content_type || c.is_mandatory);
-  const dashboardContent = courses.filter(c => c.content_type === 'upskilling' && !c.is_mandatory);
+  const standardCourses = filterCoursesByDept(courses.filter(c => c.content_type === 'course' || !c.content_type || c.is_mandatory));
+  const dashboardContent = filterCoursesByDept(courses.filter(c => c.content_type === 'upskilling' && !c.is_mandatory));
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
@@ -65,6 +90,24 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-5 justify-end">
+          <select 
+            value={filterCategory} 
+            onChange={e => setFilterDept(e.target.value)}
+            className="border-gray-200 text-gray-900 bg-white rounded-md px-3 py-2 text-sm shadow-sm"
+          >
+            <option value="all">All Categories</option>
+            
+              <option value="core">Core Course</option>
+              <option value="technical">Technical / Coding</option>
+              <option value="soft_skills">Soft Skills</option>
+              <option value="aptitude">Aptitude</option>
+              <option value="other">Other</option>
+            </select>
+          {['super_admin', 'dean', 'dept_admin', 'faculty'].includes(profile?.role) && (
+            <Link to="/studio" className="bg-[#5E171B] hover:bg-[#450F13] text-white px-3 py-2 rounded-md font-medium flex items-center shadow-sm text-sm">
+              <Plus className="w-4 h-4 mr-1" /> Add/Remove Videos
+            </Link>
+          )}
           <StreakWidget streak={profile?.streak_count || 0} />
           <div className="w-10 h-10 rounded-full bg-[#5E171B] flex items-center justify-center font-bold text-white border-2 border-gray-200 shrink-0">
              {profile?.name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || 'U'}
@@ -100,6 +143,11 @@ export default function Dashboard() {
                        </div>
                        <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-between items-center text-xs text-gray-500">
                           <span>By {course.profiles?.name || 'Faculty'}</span>
+                          {['super_admin', 'dean', 'dept_admin'].includes(profile?.role) && (
+                            <button onClick={(e) => handleDelete(e, course.id)} className="text-red-500 hover:text-red-700 p-1" disabled={isDeleting === course.id}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                           <span className={`${course.status === 'published' ? 'text-green-500' : 'text-yellow-500'}`}>{course.status}</span>
                        </div>
                     </div>
@@ -132,6 +180,11 @@ export default function Dashboard() {
                        </div>
                        <div className="mt-4 pt-4 border-t border-gray-200/50 flex justify-between items-center text-xs text-gray-500">
                           <span>By {content.profiles?.name || 'Faculty'}</span>
+                          {['super_admin', 'dean', 'dept_admin'].includes(profile?.role) && (
+                            <button onClick={(e) => handleDelete(e, content.id)} className="text-red-500 hover:text-red-700 p-1" disabled={isDeleting === content.id}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                        </div>
                     </div>
                  </Card>

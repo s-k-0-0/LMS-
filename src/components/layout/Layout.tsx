@@ -25,12 +25,16 @@ export function Layout() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editName, setEditName] = useState(profile?.name || '');
   const [editEmpId, setEditEmpId] = useState(profile?.emp_usn_id || '');
+  const [editPhone, setEditPhone] = useState(profile?.phone || '');
+  const [editBio, setEditBio] = useState(profile?.bio || '');
   const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
     if (profile) {
       if (!editName && profile.name) setEditName(profile.name);
       if (!editEmpId && profile.emp_usn_id) setEditEmpId(profile.emp_usn_id);
+      if (!editPhone && profile.phone) setEditPhone(profile.phone);
+      if (!editBio && profile.bio) setEditBio(profile.bio);
     }
   }, [profile]);
 
@@ -67,18 +71,34 @@ export function Layout() {
     }
 
     setIsSaving(true);
+    
+    // We will attempt to update all fields. Supabase might ignore non-existent cols if configured, 
+    // or fail. If it fails, we will try again without them.
     const { error } = await supabase
       .from('profiles')
-      .update({ name: editName, emp_usn_id: editEmpId })
+      .update({ name: editName, emp_usn_id: editEmpId, phone: editPhone, bio: editBio })
       .eq('id', profile.id);
-    
-    if (!error) {
+      
+    if (error && error.message?.includes('column')) {
+      // Fallback if phone/bio columns don't exist yet in the database
+      const { error: fallbackError } = await supabase
+        .from('profiles')
+        .update({ name: editName, emp_usn_id: editEmpId })
+        .eq('id', profile.id);
+        
+      if (!fallbackError) {
+        fetchProfile(profile.id);
+        setIsSettingsOpen(false);
+      } else {
+        alert('Failed to save profile.');
+      }
+    } else if (!error) {
       // Soft update local profile to reflect changes without reloading
       fetchProfile(profile.id);
       setIsSettingsOpen(false);
     } else {
       console.error(error);
-      alert('Failed to save profile. Make sure your database has the new columns.');
+      alert('Failed to save profile.');
     }
     setIsSaving(false);
   };
@@ -178,6 +198,26 @@ export function Layout() {
                 defaultValue={profile?.email || ''}
                 className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
                 disabled
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
+              <Input
+                id="phone"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
+                placeholder="Enter your phone number"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bio" className="text-gray-700">Bio</Label>
+              <Input
+                id="bio"
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                className="col-span-3 bg-gray-50 border-gray-200 text-gray-900"
+                placeholder="Tell us about yourself"
               />
             </div>
             <div className="grid gap-2">
