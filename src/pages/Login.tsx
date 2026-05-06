@@ -74,7 +74,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="mb-8 flex items-center justify-center">
-        <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-16 mix-blend-multiply" />
+        <img src="https://www.svyasa.edu.in/img/svyasa-logo-1-01.svg" alt="S-VYASA Logo" className="h-16 mix-blend-multiply" />
       </div>
 
       <Card className="w-full max-w-md bg-white border-gray-200 text-gray-900 shadow-xl rounded-2xl">
