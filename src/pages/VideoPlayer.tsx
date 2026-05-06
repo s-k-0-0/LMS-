@@ -16,17 +16,22 @@ export default function VideoPlayer() {
     const fetchLesson = async () => {
       if (!id) return;
       try {
-        const { data, error } = await supabase
+        // Fetch lesson by course_id since the URL is /courses/:id
+        const { data: lessonData, error } = await supabase
           .from('lessons')
-          .select('*, courses(title, department_id)')
-          .eq('id', id)
+          .select('*, courses(title, department_id, is_compiler_enabled)')
+          .eq('course_id', id)
+          .order('order_index', { ascending: true })
+          .limit(1)
           .single();
           
-        if (error) throw error;
-        setLesson(data);
+        if (error && error.code !== 'PGRST116') throw error;
         
-        // Track progress when started
-        if (profile) trackProgress(data.id, data.course_id, 'started');
+        if (lessonData) {
+          setLesson(lessonData);
+          // Track progress when started
+          if (profile) trackProgress(lessonData.id, lessonData.course_id, 'started');
+        }
         
       } catch (err) {
         console.error("Error fetching lesson:", err);
@@ -77,8 +82,14 @@ export default function VideoPlayer() {
     if (lesson) trackProgress(lesson.id, lesson.course_id, 'completed');
   };
 
-  if (loading) return <div className="p-8 text-center bg-[#D9D9D9]">Loading player...</div>;
-  if (!lesson) return <div className="p-8 text-center bg-[#D9D9D9]">Lesson not found</div>;
+  if (loading) return <div className="flex h-screen items-center justify-center text-center bg-[#D9D9D9]">Loading player...</div>;
+  if (!lesson) return (
+    <div className="flex flex-col items-center justify-center p-12 text-center bg-[#D9D9D9] h-64 rounded-xl border border-gray-300 mx-auto mt-10 max-w-2xl">
+      <h2 className="text-xl font-bold mb-2">No Video Available</h2>
+      <p className="text-gray-600 mb-6">This course is empty or the video is still processing.</p>
+      <Link to="/courses" className="text-[#F05A28] font-semibold hover:underline">Return to Courses</Link>
+    </div>
+  );
 
   const isYouTube = lesson.content_type?.includes('youtube') || (lesson.cf_stream_id && lesson.cf_stream_id.length === 11) || lesson.external_url?.includes('youtube');
   const isPlaylist = lesson.content_type === 'youtube_playlist' || (isYouTube && lesson.cf_stream_id?.length > 11);
@@ -144,11 +155,13 @@ export default function VideoPlayer() {
                         </a>
                      </li>
                      )}
+                     {lesson.courses?.is_compiler_enabled && (
                      <li>
                         <Link to="/compiler" className="flex items-center text-sm font-medium text-gray-200 hover:text-[#F05A28] transition-colors">
                            <PlayCircle className="h-4 w-4 mr-3 text-[#F05A28]" /> Practice Workspace
                         </Link>
                      </li>
+                     )}
                   </ul>
                </CardContent>
             </Card>

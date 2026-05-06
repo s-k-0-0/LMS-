@@ -2,13 +2,23 @@ import { useState, useEffect } from 'react';
 import { supabase, Profile, UserRole } from '../lib/supabase';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ShieldAlert, UserCog } from 'lucide-react';
+import { ShieldAlert, UserCog, Users } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 export default function UsersPanel() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Manage Students state
+  const [manageFacultyOpen, setManageFacultyOpen] = useState(false);
+  const [selectedFaculty, setSelectedFaculty] = useState<Profile | null>(null);
+  const [deptStudents, setDeptStudents] = useState<Profile[]>([]);
+  const [assignedStudentIds, setAssignedStudentIds] = useState<string[]>([]);
+  const [isSavingStudents, setIsSavingStudents] = useState(false);
+
   const { profile } = useAuth();
   
   useEffect(() => {
@@ -23,7 +33,7 @@ export default function UsersPanel() {
     const { data: deptData } = await supabase.from('departments').select('*');
     if (deptData) setDepartments(deptData);
 
-    let query = supabase.from('profiles').select('*, departments(name)');
+    let query = supabase.from('profiles').select('*, departments(name)').order('name', { ascending: true });
     
     // Filter based on role
     if (profile.role === 'dean' || profile.role === 'dept_admin' || profile.role === 'faculty') {
@@ -31,21 +41,16 @@ export default function UsersPanel() {
         query = query.eq('department_id', profile.department_id);
         
         if (profile.role === 'faculty') {
-          // Faculty can only see students in their department
           query = query.eq('role', 'student');
         } else if (profile.role === 'dept_admin') {
-          // Dept admin can see students and faculty
           query = query.in('role', ['student', 'faculty']);
         } else if (profile.role === 'dean') {
-          // Dean can see students, faculty, and dept_admins in their department
           query = query.in('role', ['student', 'faculty', 'dept_admin']);
         }
       } else {
-        // If they have no department ID set yet, they shouldn't see anything
         query = query.eq('id', 'nomatch');
       }
     }
-    // super_admin sees everyone
 
     const { data, error } = await query;
     if (data) setUsers(data as Profile[]);
@@ -56,13 +61,12 @@ export default function UsersPanel() {
   const canEditUser = (targetUser: Profile) => {
     if (!profile) return false;
     if (profile.role === 'super_admin') return true;
-    if (targetUser.role === 'super_admin') return false; // nobody can edit super admin except super admin
+    if (targetUser.role === 'super_admin') return false; 
     
     if (profile.role === 'dean') {
-      return targetUser.role !== 'dean'; // dean can edit dept_admin, faculty, student
+      return targetUser.role !== 'dean'; 
     }
     if (profile.role === 'dept_admin') {
-      // dept admin can only edit student and faculty in same department
       return (targetUser.role === 'student' || targetUser.role === 'faculty') && 
              targetUser.department_id === profile.department_id;
     }
@@ -77,7 +81,6 @@ export default function UsersPanel() {
   };
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
-     // Optimistically update state
      const previousUsers = [...users];
      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
      
@@ -85,7 +88,6 @@ export default function UsersPanel() {
      
      if (error) {
        console.error("Error updating role:", error);
-       // Revert on error
        setUsers(previousUsers);
        alert("Failed to update role. Please ensure you have sufficient permissions.");
      }
@@ -102,6 +104,54 @@ export default function UsersPanel() {
        setUsers(previousUsers);
        alert("Failed to update department. Please ensure you have sufficient permissions.");
      }
+  };
+
+  const openManageStudents = async (faculty: Profile) => {
+    if (!faculty.department_id) {
+       alert("Faculty must be assigned to a department first.");
+       return;
+    }
+    setSelectedFaculty(faculty);
+    setManageFacultyOpen(true);
+    
+    // Fetch students in this dept
+    const { data: students } = await supabase.from('profiles')
+      .select('*').eq('role', 'student').eq('department_id', faculty.department_id);
+    
+    if (students) setDeptStudents(students);
+
+    // Fetch assigned students for this faculty
+    const { data: assignments } = await supabase.from('faculty_students')
+      .select('student_id').eq('faculty_id', faculty.id);
+      
+    if (assignments) {
+      setAssignedStudentIds(assignments.map(a => a.student_id));
+    } else {
+      setAssignedStudentIds([]);
+    }
+  };
+
+  const toggleStudent = (studentId: string) => {
+    setAssignedStudentIds(prev => 
+      prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
+    );
+  };
+
+  const saveAssignments = async () => {
+    if (!selectedFaculty) return;
+    setIsSavingStudents(true);
+    
+    // Delete existing
+    await supabase.from('faculty_students').delete().eq('faculty_id', selectedFaculty.id);
+    
+    // Insert new
+    if (assignedStudentIds.length > 0) {
+      const inserts = assignedStudentIds.map(id => ({ faculty_id: selectedFaculty.id, student_id: id }));
+      await supabase.from('faculty_students').insert(inserts);
+    }
+    
+    setIsSavingStudents(false);
+    setManageFacultyOpen(false);
   };
 
   const availableRoles = getAvailableRoles();
@@ -125,8 +175,8 @@ export default function UsersPanel() {
               <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6">User</TableHead>
               <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Department</TableHead>
               <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12">Current Role</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 text-right">Points</TableHead>
-              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6 text-right">Actions</TableHead>
+              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 text-center">Manage</TableHead>
+              <TableHead className="text-gray-300 font-semibold text-xs tracking-wider uppercase h-12 px-6 text-right">Role Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -178,8 +228,17 @@ export default function UsersPanel() {
                       {user.role.replace('_', ' ')}
                    </span>
                 </TableCell>
-                <TableCell className="py-4 text-right font-mono text-[#F05A28] font-medium">
-                  {user.points || 0}
+                <TableCell className="py-4 text-center">
+                  {user.role === 'faculty' && canEditUser(user) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => openManageStudents(user)}
+                      className="bg-[#4A1414] border-[#4A1414] hover:bg-[#5A1A1A] text-gray-200 text-xs h-8"
+                    >
+                      <Users className="h-3 w-3 mr-1" /> Assign Students
+                    </Button>
+                  )}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-right">
                   <Select 
@@ -204,6 +263,49 @@ export default function UsersPanel() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={manageFacultyOpen} onOpenChange={setManageFacultyOpen}>
+        <DialogContent className="bg-[#5A1A1A] border-[#4A1414] text-white sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Assigned Students</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-sm text-gray-300">
+            Select the students who will be assigned to <strong>{selectedFaculty?.name || 'this faculty'}</strong>. Only these students will be able to view their uploaded courses.
+          </div>
+          
+          <div className="border border-[#4A1414] rounded-lg max-h-[300px] overflow-y-auto bg-[#3A1010]">
+             {deptStudents.length === 0 ? (
+                <div className="p-4 text-center text-gray-400 text-sm">No students found in this department.</div>
+             ) : (
+                <div className="divide-y divide-[#4A1414]">
+                  {deptStudents.map(student => (
+                    <label key={student.id} className="flex items-center p-3 hover:bg-[#4A1414] cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={assignedStudentIds.includes(student.id)}
+                        onChange={() => toggleStudent(student.id)}
+                        className="rounded border-[#F05A28] text-[#F05A28] shadow-sm focus:ring-[#F05A28] bg-[#1A0A0A] mr-3"
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-gray-200 text-sm">{student.name || 'Unnamed Student'}</span>
+                        <span className="text-xs text-gray-400">{student.email}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+             )}
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" className="text-gray-900" onClick={() => setManageFacultyOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-[#F05A28] hover:bg-[#de4c1a] text-white" onClick={saveAssignments} disabled={isSavingStudents}>
+              {isSavingStudents ? 'Saving...' : 'Save Assignments'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

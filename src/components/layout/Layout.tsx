@@ -44,8 +44,6 @@ export function Layout() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: GraduationCap, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
     { name: 'Courses', href: '/courses', icon: BookOpen, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
-    { name: 'Compiler', href: '/compiler', icon: Code, roles: ['student', 'faculty', 'dept_admin'] },
-    { name: 'Aptitude Engine', href: '/aptitude', icon: BrainCircuit, roles: ['student', 'super_admin'] },
     { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'dept_admin', 'dean', 'super_admin'] },
     { name: 'Approvals', href: '/approvals', icon: CheckSquare, roles: ['dept_admin', 'dean', 'super_admin'] },
     { name: 'Users Panel', href: '/admin', icon: Users, roles: ['dept_admin', 'dean', 'super_admin'] },

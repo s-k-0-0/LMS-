@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout, ProtectedRoute } from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Compiler from './pages/Compiler';
-import AptitudeEngine from './pages/AptitudeEngine';
 import FacultyStudio from './pages/FacultyStudio';
 import ContentApprovals from './pages/ContentApprovals';
 import UsersPanel from './pages/UsersPanel';
@@ -38,13 +37,7 @@ function App() {
           } />
           
           {/* Student Only */}
-          <Route path="aptitude" element={
-            <ProtectedRoute allowedRoles={['student', 'super_admin']}>
-              <AptitudeEngine />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="lesson/:id" element={
+          <Route path="courses/:id" element={
             <ProtectedRoute allowedRoles={['student', 'faculty', 'dept_admin', 'dean', 'super_admin']}>
               <VideoPlayer />
             </ProtectedRoute>
