@@ -67,7 +67,9 @@ export default function FacultyStudio() {
           title: title,
           content_type: contentType,
           cf_stream_id: ytId, // Saving youtube ID here for simplicity
-          course_id: null
+          course_id: null,
+          created_by: profile?.id,
+          status: 'pending_verification'
         });
 
         if (dbError) throw dbError;
@@ -142,7 +144,9 @@ export default function FacultyStudio() {
               title: title,
               content_type: 'video',
               cf_stream_id: cfStreamId,
-              course_id: null // We'll need a way to assign course_id normally
+              course_id: null, // We'll need a way to assign course_id normally
+              created_by: profile?.id,
+              status: 'pending_verification'
             });
 
             if (dbError) console.error("Could not save lesson to DB", dbError);
@@ -172,26 +176,26 @@ export default function FacultyStudio() {
     <div className="max-w-4xl mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Faculty Studio</h1>
-        <p className="text-rose-400">Create new courses and direct-upload lessons via Cloudflare Stream or YouTube.</p>
+        <p className="text-gray-700">Create new courses and direct-upload lessons via Cloudflare Stream or YouTube.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 bg-rose-900 border-rose-800 text-rose-100 shadow-none rounded-2xl">
+        <Card className="md:col-span-2 bg-[#5A1A1A] border-[#4A1414] text-white shadow-none rounded-2xl">
           <CardHeader>
             <CardTitle>New Lesson Upload</CardTitle>
-            <CardDescription className="text-rose-400">Add content to your courses</CardDescription>
+            <CardDescription className="text-gray-300">Add content to your courses</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4 mb-6">
               <button 
                 onClick={() => setUploadMode('youtube')}
-                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'youtube' ? 'bg-pink-500/10 border-pink-500 text-pink-400' : 'bg-rose-950 border-rose-800 hover:border-pink-500/50 text-rose-400'}`}
+                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'youtube' ? 'bg-[#F05A28]/10 border-[#F05A28] text-[#F05A28]' : 'bg-[#4A1414] border-[#4A1414] hover:border-[#F05A28]/50 text-gray-300'}`}
               >
                 <Youtube className="w-5 h-5 mr-2" /> YouTube Link
               </button>
               <button 
                 onClick={() => setUploadMode('cloudflare')}
-                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'cloudflare' ? 'bg-pink-500/10 border-pink-500 text-pink-400' : 'bg-rose-950 border-rose-800 hover:border-pink-500/50 text-rose-400'}`}
+                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center border transition-all ${uploadMode === 'cloudflare' ? 'bg-[#F05A28]/10 border-[#F05A28] text-[#F05A28]' : 'bg-[#4A1414] border-[#4A1414] hover:border-[#F05A28]/50 text-gray-300'}`}
               >
                 <Video className="w-5 h-5 mr-2" /> Direct Upload
               </button>
@@ -207,49 +211,49 @@ export default function FacultyStudio() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-rose-300">Lesson Title</Label>
+                <Label htmlFor="title" className="text-gray-200">Lesson Title</Label>
                 <Input 
                   id="title" 
                   value={title} 
                   onChange={e => setTitle(e.target.value)} 
                   required 
-                  className="bg-rose-950 border-rose-800 text-rose-100 rounded-lg"
+                  className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg"
                   placeholder="e.g. Introduction to Advanced Data Structures"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="desc" className="text-rose-300">Description</Label>
+                <Label htmlFor="desc" className="text-gray-200">Description</Label>
                 <Textarea 
                   id="desc" 
                   value={desc} 
                   onChange={e => setDesc(e.target.value)} 
-                  className="bg-rose-950 border-rose-800 h-24 text-rose-100 rounded-lg"
+                  className="bg-[#4A1414] border-[#4A1414] h-24 text-white rounded-lg"
                   placeholder="What will students learn?"
                 />
               </div>
 
               {uploadMode === 'youtube' ? (
                  <div className="space-y-2">
-                   <Label htmlFor="youtubeUrl" className="text-rose-300">YouTube URL</Label>
+                   <Label htmlFor="youtubeUrl" className="text-gray-200">YouTube URL</Label>
                    <Input 
                      id="youtubeUrl" 
                      value={youtubeUrl} 
                      onChange={e => setYoutubeUrl(e.target.value)} 
                      required={uploadMode === 'youtube'}
-                     className="bg-rose-950 border-rose-800 text-rose-100 rounded-lg"
+                     className="bg-[#4A1414] border-[#4A1414] text-white rounded-lg"
                      placeholder="https://www.youtube.com/watch?v=..."
                    />
                  </div>
               ) : (
                 <div className="pt-4">
                   <div 
-                    className="border-2 border-dashed border-rose-700 rounded-xl p-8 text-center hover:border-pink-500 hover:bg-rose-800/50 transition-all cursor-pointer"
+                    className="border-2 border-dashed border-[#4A1414] rounded-xl p-8 text-center hover:border-[#F05A28] hover:bg-[#4A1414]/50 transition-all cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="h-10 w-10 text-rose-400 mx-auto mb-4" />
-                    <p className="text-sm font-medium mb-1 text-rose-200">Click to select a video file</p>
-                    <p className="text-xs text-rose-500">Maximum file size: 5GB</p>
+                    <Upload className="h-10 w-10 text-gray-300 mx-auto mb-4" />
+                    <p className="text-sm font-medium mb-1 text-gray-100">Click to select a video file</p>
+                    <p className="text-xs text-gray-400">Maximum file size: 5GB</p>
                     <input 
                       type="file" 
                       ref={fileInputRef} 
@@ -267,13 +271,13 @@ export default function FacultyStudio() {
 
               {isUploading && uploadMode === 'cloudflare' && (
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-mono text-rose-400">
+                  <div className="flex justify-between text-xs font-mono text-gray-300">
                     <span>Uploading...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <div className="h-2 w-full bg-rose-800 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-[#4A1414] rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-pink-500 transition-all duration-200" 
+                      className="h-full bg-[#F05A28] transition-all duration-200" 
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -281,13 +285,13 @@ export default function FacultyStudio() {
               )}
 
               {uploaded && (
-                 <div className="p-4 bg-pink-500/20 border border-pink-500 text-pink-400 rounded-lg flex items-center">
+                 <div className="p-4 bg-[#F05A28]/20 border border-[#F05A28] text-[#F05A28] rounded-lg flex items-center">
                     <CheckCircle2 className="h-5 w-5 mr-3 shrink-0" />
                     <span className="text-sm font-medium">Lesson successfully added!</span>
                  </div>
               )}
 
-              <Button type="submit" disabled={isUploading || !title} className="w-full bg-pink-500 hover:bg-pink-600 text-rose-950 font-semibold rounded-lg">
+              <Button type="submit" disabled={isUploading || !title} className="w-full bg-[#F05A28] hover:bg-[#de4c1a] text-white font-semibold rounded-lg">
                 {uploadMode === 'youtube' ? 'Save Lesson' : 'Upload & Create Lesson'}
               </Button>
             </form>
@@ -295,20 +299,20 @@ export default function FacultyStudio() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="bg-rose-900 border-rose-800 text-rose-100 shadow-none rounded-2xl">
-            <CardHeader className="pb-4 border-b border-rose-800/50">
-              <CardTitle className="text-sm font-bold flex items-center text-rose-300">
+          <Card className="bg-[#5A1A1A] border-[#4A1414] text-white shadow-none rounded-2xl">
+            <CardHeader className="pb-4 border-b border-[#4A1414]/50">
+              <CardTitle className="text-sm font-bold flex items-center text-gray-200">
                 <Server className="h-4 w-4 mr-2 text-blue-400" /> Storage Stats
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-xs text-rose-400 mb-2 font-medium">
+                  <div className="flex justify-between text-xs text-gray-300 mb-2 font-medium">
                     <span>Cloudflare Stream</span>
                     <span>45 / 1000 mins</span>
                   </div>
-                  <div className="h-1.5 w-full bg-rose-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-[#4A1414] rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 w-[5%]" />
                   </div>
                 </div>

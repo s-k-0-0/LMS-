@@ -10,7 +10,8 @@ import {
   Settings, 
   BrainCircuit, 
   LogOut,
-  GraduationCap
+  GraduationCap,
+  CheckSquare
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Label } from '../ui/label';
@@ -18,24 +19,36 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 
 export function Layout() {
-  const { profile, loading, hasRole } = useAuth();
+  const { profile, loading, hasRole, fetchProfile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [editName, setEditName] = useState(profile?.name || '');
+  const [editEmpId, setEditEmpId] = useState(profile?.emp_usn_id || '');
+  const [isSaving, setIsSaving] = useState(false);
+
+  React.useEffect(() => {
+    if (profile) {
+      if (!editName && profile.name) setEditName(profile.name);
+      if (!editEmpId && profile.emp_usn_id) setEditEmpId(profile.emp_usn_id);
+    }
+  }, [profile]);
 
   if (loading) {
-    return <div className="min-h-screen bg-rose-950 flex items-center justify-center text-pink-500">Loading Vidya...</div>;
+    return <div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-[#F05A28]">Loading Vidya...</div>;
   }
 
   // Allow access for testing if not auth'd yet
   const userRole = profile?.role || 'admin'; 
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: GraduationCap, roles: ['student', 'faculty', 'admin', 'super_admin'] },
-    { name: 'Compiler', href: '/compiler', icon: Code, roles: ['student', 'faculty'] },
-    { name: 'Aptitude Engine', href: '/aptitude', icon: BrainCircuit, roles: ['student'] },
-    { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'admin', 'super_admin'] },
-    { name: 'Users Panel', href: '/admin', icon: Users, roles: ['admin', 'super_admin'] },
+    { name: 'Dashboard', href: '/', icon: GraduationCap, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
+    { name: 'Courses', href: '/courses', icon: BookOpen, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
+    { name: 'Compiler', href: '/compiler', icon: Code, roles: ['student', 'faculty', 'dept_admin'] },
+    { name: 'Aptitude Engine', href: '/aptitude', icon: BrainCircuit, roles: ['student', 'super_admin'] },
+    { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'dept_admin', 'dean', 'super_admin'] },
+    { name: 'Approvals', href: '/approvals', icon: CheckSquare, roles: ['dept_admin', 'dean', 'super_admin'] },
+    { name: 'Users Panel', href: '/admin', icon: Users, roles: ['dept_admin', 'dean', 'super_admin'] },
   ];
 
   const handleLogout = async () => {
@@ -43,13 +56,37 @@ export function Layout() {
     navigate('/login');
   };
 
+  const handleSaveProfile = async () => {
+    if (!profile) return;
+    if (!editName.trim() || !editEmpId.trim()) {
+      alert("Name and USN/Employee ID are mandatory fields.");
+      return;
+    }
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ name: editName, emp_usn_id: editEmpId })
+      .eq('id', profile.id);
+    
+    if (!error) {
+      // Soft update local profile to reflect changes without reloading
+      fetchProfile(profile.id);
+      setIsSettingsOpen(false);
+    } else {
+      console.error(error);
+      alert('Failed to save profile. Make sure your database has the new columns.');
+    }
+    setIsSaving(false);
+  };
+
   return (
-    <div className="flex h-screen bg-rose-950 text-rose-50 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#D9D9D9] text-gray-900 font-sans overflow-hidden">
       {/* Sidebar */}
-      <div className="w-[240px] bg-rose-900 border-r border-rose-800 flex flex-col hidden md:flex">
+      <div className="w-[240px] bg-[#5A1A1A] border-r border-[#4A1414] flex flex-col hidden md:flex text-white">
         <div className="h-20 flex items-center px-6">
-          <BookOpen className="h-6 w-6 text-pink-500 mr-3" />
-          <span className="font-bold text-2xl text-pink-500 tracking-tight">Vidya</span>
+          <BookOpen className="h-6 w-6 text-[#F05A28] mr-3" />
+          <span className="font-bold text-2xl text-[#F05A28] tracking-tight">Vidya</span>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-2">
@@ -62,11 +99,11 @@ export function Layout() {
                 to={item.href}
                 className={`flex items-center px-4 py-2.5 text-sm rounded-lg transition-all ${
                   isActive 
-                    ? 'bg-pink-500/20 text-pink-500 font-semibold' 
-                    : 'text-rose-400 hover:text-white hover:bg-rose-800/50'
+                    ? 'bg-[#F05A28]/20 text-[#F05A28] font-semibold' 
+                    : 'text-gray-300 hover:text-white hover:bg-[#4A1414]/50'
                 }`}
               >
-                <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-pink-500' : 'text-rose-400'}`} />
+                <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-[#F05A28]' : 'text-gray-300'}`} />
                 {item.name}
               </NavLink>
             );
@@ -74,7 +111,7 @@ export function Layout() {
         </nav>
 
         <div className="p-4 flex flex-col gap-2">
-          <div onClick={() => setIsSettingsOpen(true)} className="flex items-center px-4 py-2.5 text-sm rounded-lg text-rose-400 hover:text-white hover:bg-rose-800/50 cursor-pointer">
+          <div onClick={() => setIsSettingsOpen(true)} className="flex items-center px-4 py-2.5 text-sm rounded-lg text-gray-300 hover:text-white hover:bg-[#4A1414]/50 cursor-pointer">
             <Settings className="h-5 w-5 mr-3" />
             Profile Settings
           </div>
@@ -87,61 +124,84 @@ export function Layout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-rose-900 border-b border-rose-800 flex items-center justify-between px-6 md:hidden">
+        <header className="h-16 bg-[#5A1A1A] border-b border-[#4A1414] flex items-center justify-between px-6 md:hidden text-white">
           <div className="flex items-center">
-            <BookOpen className="h-6 w-6 text-pink-500 mr-2" />
-            <span className="font-bold text-xl text-pink-500">Vidya</span>
+            <BookOpen className="h-6 w-6 text-[#F05A28] mr-2" />
+            <span className="font-bold text-xl text-[#F05A28]">Vidya</span>
           </div>
-          <button onClick={() => setIsSettingsOpen(true)} className="text-rose-400 hover:text-white">
+          <button onClick={() => setIsSettingsOpen(true)} className="text-gray-300 hover:text-white">
             <Settings className="h-6 w-6" />
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-rose-950">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#D9D9D9]">
           <Outlet />
         </main>
       </div>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="bg-rose-900 border-rose-800 text-rose-50 sm:max-w-[425px]">
+        <DialogContent className="bg-[#5A1A1A] border-[#4A1414] text-white sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Profile Settings</DialogTitle>
-            <DialogDescription className="text-rose-400">
+            <DialogDescription className="text-gray-300">
               View and manage your account details. Contact super admin to change roles.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-rose-200">Email Address</Label>
+              <Label htmlFor="name" className="text-gray-200">Full Name</Label>
+              <Input
+                id="name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="emp_usn" className="text-gray-200">USN / Employee ID</Label>
+              <Input
+                id="emp_usn"
+                value={editEmpId}
+                onChange={(e) => setEditEmpId(e.target.value)}
+                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
+                placeholder="Enter your USN or Employee ID"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email" className="text-gray-200">Email Address</Label>
               <Input
                 id="email"
                 defaultValue={profile?.email || ''}
-                className="col-span-3 bg-rose-950 border-rose-800 text-rose-50"
+                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
                 disabled
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="role" className="text-rose-200">Current Role</Label>
+              <Label htmlFor="role" className="text-gray-200">Current Role</Label>
               <Input
                 id="role"
-                defaultValue={profile?.role || ''}
-                className="col-span-3 bg-rose-950 border-rose-800 text-rose-50 capitalize"
+                defaultValue={profile?.role?.replace('_', ' ') || ''}
+                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white capitalize"
                 disabled
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="points" className="text-rose-200">Total Points</Label>
+              <Label htmlFor="dept" className="text-gray-200">Department</Label>
               <Input
-                id="points"
-                defaultValue={profile?.points?.toString() || '0'}
-                className="col-span-3 bg-rose-950 border-rose-800 text-rose-50"
+                id="dept"
+                defaultValue={profile?.departments?.name || 'Not assigned'}
+                className="col-span-3 bg-[#4A1414] border-[#4A1414] text-white"
                 disabled
               />
             </div>
           </div>
-          <div className="flex justify-end">
-            <Button className="bg-pink-500 hover:bg-pink-600 text-rose-950" onClick={() => setIsSettingsOpen(false)}>
-              Done
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" className="text-gray-900" onClick={() => setIsSettingsOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-[#F05A28] hover:bg-[#de4c1a] text-white" onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </DialogContent>
@@ -155,7 +215,7 @@ export function ProtectedRoute({ children, allowedRoles }: { children: React.Rea
   const { hasRole, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (loading) return <div className="min-h-screen bg-rose-950 flex items-center justify-center text-pink-500">Authenticating...</div>;
+  if (loading) return <div className="min-h-screen bg-[#D9D9D9] flex items-center justify-center text-[#F05A28]">Authenticating...</div>;
 
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} />;
   if (!hasRole(allowedRoles)) {
