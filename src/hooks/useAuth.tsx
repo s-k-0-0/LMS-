@@ -37,7 +37,7 @@ export function useAuth() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, departments(name)')
         .eq('id', userId)
         .single();
         
@@ -46,7 +46,7 @@ export function useAuth() {
         // to not break the UI while it's created, but print the error.
         console.error('Profile fetch error:', error);
       } else if (data) {
-        setProfile(data as Profile);
+        setProfile(data as Profile & { departments?: { name: string } });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -62,5 +62,5 @@ export function useAuth() {
     return roles.includes(profile.role);
   };
 
-  return { profile, loading, isAuthenticated, hasRole };
+  return { profile, loading, isAuthenticated, hasRole, fetchProfile };
 }

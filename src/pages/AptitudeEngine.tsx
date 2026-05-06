@@ -75,17 +75,17 @@ export default function AptitudeEngine() {
   if (isFinished) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Card className="bg-rose-900 border-rose-800 rounded-2xl text-rose-100 max-w-md w-full text-center py-8 shadow-none shadow-none">
+        <Card className="bg-[#5A1A1A] border-[#4A1414] rounded-2xl text-white max-w-md w-full text-center py-8 shadow-none shadow-none">
           <CardHeader>
              <CardTitle className="text-2xl font-bold flex flex-col items-center gap-4">
-                 <CheckCircle2 className="h-16 w-16 text-pink-500" />
+                 <CheckCircle2 className="h-16 w-16 text-[#F05A28]" />
                  Assessment Complete
              </CardTitle>
           </CardHeader>
           <CardContent>
-             <p className="text-4xl font-mono text-pink-400 font-bold mb-2">{score}</p>
-             <p className="text-rose-400 font-medium">Total Points Earned</p>
-             <Button className="mt-8 bg-pink-500 text-rose-950 font-semibold hover:bg-pink-600 w-full rounded-lg" onClick={() => window.location.reload()}>Take Another Test</Button>
+             <p className="text-4xl font-mono text-[#F05A28] font-bold mb-2">{score}</p>
+             <p className="text-gray-300 font-medium">Total Points Earned</p>
+             <Button className="mt-8 bg-[#F05A28] text-white font-semibold hover:bg-[#de4c1a] w-full rounded-lg" onClick={() => window.location.reload()}>Take Another Test</Button>
           </CardContent>
         </Card>
       </div>
@@ -98,33 +98,33 @@ export default function AptitudeEngine() {
     <div className="max-w-3xl mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-xl font-bold font-sans text-rose-50">{q.category}</h1>
-          <p className="text-sm text-rose-400 font-medium mt-1">Question {currentQ + 1} of {MOCK_QUESTIONS.length}</p>
+          <h1 className="text-xl font-bold font-sans text-gray-900">{q.category}</h1>
+          <p className="text-sm text-gray-300 font-medium mt-1">Question {currentQ + 1} of {MOCK_QUESTIONS.length}</p>
         </div>
-        <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-mono text-lg font-bold ${timeLeft <= 10 ? 'bg-red-950 border border-red-500/50 text-red-500' : 'bg-rose-900 border border-rose-800 text-rose-300'}`}>
+        <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-mono text-lg font-bold ${timeLeft <= 10 ? 'bg-red-950 border border-red-500/50 text-red-500' : 'bg-[#5A1A1A] border border-[#4A1414] text-gray-200'}`}>
           <Timer className="h-5 w-5" />
           <span>00:{timeLeft.toString().padStart(2, '0')}</span>
         </div>
       </div>
 
-      <Card className="bg-rose-900 border-rose-800 text-rose-100 shadow-none rounded-2xl mb-6">
-        <CardHeader className="border-b border-rose-800/50 pb-4 mb-4">
+      <Card className="bg-[#5A1A1A] border-[#4A1414] text-white shadow-none rounded-2xl mb-6">
+        <CardHeader className="border-b border-[#4A1414]/50 pb-4 mb-4">
            <CardTitle className="text-lg leading-relaxed">{q.question}</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-6">
           {q.options.map((opt, i) => {
-            let btnClass = "w-full justify-start py-6 px-4 text-left hover:bg-rose-800 bg-rose-800 border-none rounded-lg text-sm text-white font-medium whitespace-normal h-auto";
+            let btnClass = "w-full justify-start py-6 px-4 text-left hover:bg-[#4A1414] bg-[#4A1414] border-none rounded-lg text-sm text-white font-medium whitespace-normal h-auto";
             let icon = null;
 
             if (showExplanation) {
                if (opt === q.correct) {
-                 btnClass = "w-full justify-start py-6 px-4 text-left bg-pink-500/20 border border-pink-500 text-pink-400 rounded-lg text-sm font-medium whitespace-normal h-auto";
-                 icon = <CheckCircle2 className="h-5 w-5 text-pink-500 ml-auto shrink-0" />;
+                 btnClass = "w-full justify-start py-6 px-4 text-left bg-[#F05A28]/20 border border-[#F05A28] text-[#F05A28] rounded-lg text-sm font-medium whitespace-normal h-auto";
+                 icon = <CheckCircle2 className="h-5 w-5 text-[#F05A28] ml-auto shrink-0" />;
                } else if (opt === selectedOpt) {
                  btnClass = "w-full justify-start py-6 px-4 text-left bg-red-950 border border-red-700 text-red-100 rounded-lg text-sm font-medium whitespace-normal h-auto";
                  icon = <XCircle className="h-5 w-5 text-red-500 ml-auto shrink-0" />;
                } else {
-                 btnClass = "w-full justify-start py-6 px-4 text-left bg-rose-900 border border-rose-800 text-rose-500 rounded-lg text-sm font-medium whitespace-normal h-auto opacity-60";
+                 btnClass = "w-full justify-start py-6 px-4 text-left bg-[#5A1A1A] border border-[#4A1414] text-gray-500 rounded-lg text-sm font-medium whitespace-normal h-auto opacity-60";
                }
             }
 
@@ -136,7 +136,7 @@ export default function AptitudeEngine() {
                 onClick={() => handleSelect(opt)}
                 disabled={showExplanation}
               >
-                 <span className="font-mono text-rose-400 mr-3 shrink-0">{String.fromCharCode(65 + i)}.</span>
+                 <span className="font-mono text-gray-300 mr-3 shrink-0">{String.fromCharCode(65 + i)}.</span>
                  <span className="leading-snug">{opt}</span>
                  {icon}
               </Button>
@@ -146,15 +146,15 @@ export default function AptitudeEngine() {
       </Card>
 
       {showExplanation && (
-        <div className="bg-rose-900 border border-rose-800 rounded-2xl p-6 mb-6 animate-in slide-in-from-bottom-2">
-           <h3 className="text-xs uppercase tracking-widest text-pink-500 font-bold mb-2">Explanation</h3>
-           <p className="text-rose-300 text-sm leading-relaxed">{q.explanation}</p>
+        <div className="bg-[#5A1A1A] border border-[#4A1414] rounded-2xl p-6 mb-6 animate-in slide-in-from-bottom-2">
+           <h3 className="text-xs uppercase tracking-widest text-[#F05A28] font-bold mb-2">Explanation</h3>
+           <p className="text-gray-200 text-sm leading-relaxed">{q.explanation}</p>
         </div>
       )}
 
       {showExplanation && (
         <div className="flex justify-end animate-in fade-in">
-          <Button onClick={handleNext} className="bg-pink-500 text-rose-950 font-semibold hover:bg-pink-600 px-8 rounded-lg">
+          <Button onClick={handleNext} className="bg-[#F05A28] text-white font-semibold hover:bg-[#de4c1a] px-8 rounded-lg">
              {currentQ < MOCK_QUESTIONS.length - 1 ? 'Next Question' : 'Finish Test'}
           </Button>
         </div>
