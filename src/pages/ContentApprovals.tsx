@@ -60,9 +60,13 @@ export default function ContentApprovals() {
   };
 
   const handleReject = async (courseId: string) => {
+    await supabase.from('lessons').delete().eq('course_id', courseId);
     const { error } = await supabase.from('courses').delete().eq('id', courseId);
     if (!error) {
       setCourses(courses.filter(c => c.id !== courseId));
+    } else {
+      console.error("Error rejecting course:", error);
+      alert("Failed to reject course: " + error.message);
     }
   };
 

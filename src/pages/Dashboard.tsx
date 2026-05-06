@@ -65,7 +65,14 @@ export default function Dashboard() {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     setIsDeleting(courseId);
-    await supabase.from('courses').delete().eq('id', courseId);
+        // Manual cascade in case constraints prevent delete
+    await supabase.from('student_progress').delete().eq('course_id', courseId);
+    await supabase.from('lessons').delete().eq('course_id', courseId);
+    const { error } = await supabase.from('courses').delete().eq('id', courseId);
+    if (error) {
+      console.error(error);
+      alert("Error deleting course: " + error.message);
+    }
     setIsDeleting(null);
     setCourses(prev => prev.filter(c => c.id !== courseId));
   };
