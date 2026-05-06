@@ -41,16 +41,20 @@ async function run() {
   
   console.log("Yoga course created with ID", course.id);
   
-  // Update yoga lesson
-  const { error: updateErr, data } = await supabase.from('lessons')
-    .update({ cf_stream_id: 's2NQhpFGIOg' })
-    .in('cf_stream_id', ['v7AYKMP6rOE'])
-    .select();
+  // Insert yoga lesson
+  const { error: lessonErr } = await supabase.from('lessons').insert({
+    course_id: course.id,
+    title: 'Introduction to Ashtanga Yoga',
+    content_type: 'youtube_video',
+    cf_stream_id: 'eZQ3VPoE590',
+    status: 'published',
+    created_by: superAdminId
+  });
   
-  if (updateErr) {
-    console.error('Error updating lesson:', updateErr);
+  if (lessonErr) {
+    console.error('Error inserting lesson:', lessonErr);
   } else {
-    console.log("Yoga lesson updated!", data);
+    console.log("Yoga lesson created!");
   }
 }
 
