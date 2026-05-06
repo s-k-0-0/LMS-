@@ -37,7 +37,7 @@ export function Layout() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-        <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-16 mix-blend-multiply mb-4" />
+        <img src="https://www.svyasa.edu.in/img/svyasa-logo-1-01.svg" alt="S-VYASA Logo" className="h-16 mix-blend-multiply mb-4" />
         <div className="text-[#5E171B] font-medium">Loading LMS...</div>
       </div>
     );
@@ -88,7 +88,7 @@ export function Layout() {
       {/* Sidebar */}
       <div className="w-[240px] bg-white border-r border-gray-200 flex flex-col hidden md:flex text-gray-900">
         <div className="h-20 flex items-center px-6 border-b border-gray-100">
-          <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-10 mix-blend-multiply" />
+          <img src="https://www.svyasa.edu.in/img/svyasa-logo-1-01.svg" alt="S-VYASA Logo" className="h-10 mix-blend-multiply" />
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-2">
@@ -128,7 +128,7 @@ export function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 md:hidden text-gray-900">
           <div className="flex items-center">
-            <img src="https://svyasa.edu.in/images/logo.png" alt="S-VYASA Logo" className="h-8 mix-blend-multiply" />
+            <img src="https://www.svyasa.edu.in/img/svyasa-logo-1-01.svg" alt="S-VYASA Logo" className="h-8 mix-blend-multiply" />
           </div>
           <button onClick={() => setIsSettingsOpen(true)} className="text-gray-600 hover:text-gray-900">
             <Settings className="h-6 w-6" />

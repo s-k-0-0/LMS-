@@ -11,6 +11,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState('student');
   const [usnEmpId, setUsnEmpId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,8 @@ export default function Login() {
           options: {
             data: {
               name: name,
-              emp_usn_id: usnEmpId
+              emp_usn_id: usnEmpId,
+              role: role
             }
           }
         });
@@ -51,7 +53,7 @@ export default function Login() {
         
         // Wait, supabase triggers might handle insert, but just in case, we can update it if session exists
         if (data.user) {
-           await supabase.from('profiles').update({ name, emp_usn_id: usnEmpId }).eq('id', data.user.id);
+           await supabase.from('profiles').update({ name, emp_usn_id: usnEmpId, role }).eq('id', data.user.id);
         }
         
         setError('Signup successful! You can now log in.');
@@ -112,10 +114,24 @@ export default function Login() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="usn_empId" className="text-gray-800">USN / Employee ID</Label>
+                  <Label htmlFor="role" className="text-gray-800">I am a</Label>
+                  <select 
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="flex h-10 w-full rounded-md border bg-gray-50 px-3 py-2 text-sm text-gray-900 border-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5E171B] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="student">Student</option>
+                    <option value="faculty">Faculty</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="usn_empId" className="text-gray-800">
+                    {role === 'student' ? 'USN (University Seat Number)' : 'Employee ID'}
+                  </Label>
                   <Input 
                     id="usn_empId" 
-                    placeholder="Enter your USN or Employee ID" 
+                    placeholder={role === 'student' ? 'Enter your USN' : 'Enter your Employee ID'} 
                     value={usnEmpId}
                     onChange={(e) => setUsnEmpId(e.target.value)}
                     required
