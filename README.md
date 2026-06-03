@@ -2,19 +2,14 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
 
-This contains everything you need to run your app locally.
+1. Download zip file.
+2. Extract to a separate folder.
+3. Open the entire folder in VS Code or any other IDE.
+   
+NOTE - Make sure you have react and nodejs
 
-View your app in AI Studio: https://ai.studio/apps/8e2cf19b-ff9a-4fb8-a34c-4033bcc5e1e6
+4. Run the command - "npm install" or "npm i"
+5. Run "npm run dev" so that it opens in port 3000 or 8000 it may vary depend on the user's device.
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+https://svyasa-lms.vercel.app
