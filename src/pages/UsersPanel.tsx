@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase, Profile, UserRole } from '../lib/supabase';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ShieldAlert, UserCog, Users } from 'lucide-react';
+import { ShieldAlert, UserCog, Users, GraduationCap, BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -19,7 +19,45 @@ export default function UsersPanel() {
   const [assignedStudentIds, setAssignedStudentIds] = useState<string[]>([]);
   const [isSavingStudents, setIsSavingStudents] = useState(false);
 
+  // Student progress tracking states
+  const [trackProgressOpen, setTrackProgressOpen] = useState(false);
+  const [trackingStudent, setTrackingStudent] = useState<Profile | null>(null);
+  const [studentProgressData, setStudentProgressData] = useState<any[]>([]);
+  const [studentExtraInfo, setStudentExtraInfo] = useState<any>(null);
+  const [isLoadingTracking, setIsLoadingTracking] = useState(false);
+
   const { profile } = useAuth();
+
+  const openTrackProgress = async (student: Profile) => {
+    setTrackingStudent(student);
+    setTrackProgressOpen(true);
+    setIsLoadingTracking(true);
+    setStudentProgressData([]);
+    setStudentExtraInfo(null);
+
+    try {
+      // 1. Fetch progress records
+      const { data, error } = await supabase
+        .from('student_progress')
+        .select('*, courses(title, category), lessons(title)')
+        .eq('student_id', student.id)
+        .order('created_at', { ascending: false });
+        
+      if (data) {
+        setStudentProgressData(data);
+      }
+
+      // 2. Fetch extra profile details cached in localStorage
+      const cached = localStorage.getItem(`profile_details_${student.id}`);
+      if (cached) {
+        setStudentExtraInfo(JSON.parse(cached));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingTracking(false);
+    }
+  };
   
   useEffect(() => {
     fetchUsersAndDepts();
@@ -239,6 +277,16 @@ export default function UsersPanel() {
                       <Users className="h-3 w-3 mr-1" /> Assign Students
                     </Button>
                   )}
+                  {user.role === 'student' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => openTrackProgress(user)}
+                      className="bg-gray-50 border-gray-200 hover:bg-white text-gray-750 text-xs h-8 hover:border-[#5E171B]/50"
+                    >
+                      <GraduationCap className="h-3.5 w-3.5 mr-1.5 text-[#5E171B]" /> Track Progress
+                    </Button>
+                  )}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-right">
                   <Select 
@@ -302,6 +350,110 @@ export default function UsersPanel() {
             </Button>
             <Button className="bg-[#5E171B] hover:bg-[#450F13] text-white" onClick={saveAssignments} disabled={isSavingStudents}>
               {isSavingStudents ? 'Saving...' : 'Save Assignments'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Progress Telemetry Dialog */}
+      <Dialog open={trackProgressOpen} onOpenChange={setTrackProgressOpen}>
+        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[550px]" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center text-[#5E171B]">
+              <GraduationCap className="h-6 w-6 mr-2" />
+              S-VYASA Student Academic Tracker
+            </DialogTitle>
+          </DialogHeader>
+
+          {trackingStudent && (
+            <div className="py-2 space-y-4 flex flex-col">
+              {/* Profile Card Summary & Extra Details */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col gap-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-base">{trackingStudent.name || 'Unnamed Student'}</h3>
+                    <p className="text-xs text-gray-500 font-mono mt-0.5">{trackingStudent.email}</p>
+                  </div>
+                  <span className="bg-[#5E171B]/10 text-[#5E171B] border border-[#5E171B]/20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+                    {trackingStudent.emp_usn_id || 'No Roll/USN'}
+                  </span>
+                </div>
+
+                {/* Additional student details editable in profile */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2 pt-2 border-t border-gray-200/50 text-xs">
+                  <div>
+                    <span className="text-gray-400 block font-semibold uppercase tracking-wider text-[9px]">Department</span>
+                    <span className="text-gray-700 font-medium">{trackingStudent.departments?.name || 'Not Assigned'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block font-semibold uppercase tracking-wider text-[9px]">Phone Number</span>
+                    <span className="text-gray-700 font-medium">{studentExtraInfo?.phone || 'Not Shared'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block font-semibold uppercase tracking-wider text-[9px]">Academic Year</span>
+                    <span className="text-gray-700 font-medium">{studentExtraInfo?.academicYear || 'Not Specified'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block font-semibold uppercase tracking-wider text-[9px]">Major / Specialty</span>
+                    <span className="text-gray-700 font-medium">{studentExtraInfo?.majorSubject || 'Not Specified'}</span>
+                  </div>
+                </div>
+
+                {studentExtraInfo?.bio && (
+                  <div className="text-xs mt-2 border-t border-gray-200/50 pt-2">
+                    <span className="text-gray-400 block font-semibold uppercase tracking-wider text-[9px] mb-0.5">Bio / Objective</span>
+                    <p className="text-gray-700 leading-snug italic font-normal">"{studentExtraInfo.bio}"</p>
+                  </div>
+                )}
+
+                {studentExtraInfo?.achievements && (
+                  <div className="text-xs mt-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 text-yellow-850">
+                    <span className="font-bold block text-[10px] uppercase tracking-wider">Student Achievements</span>
+                    <p className="mt-0.5 text-xs font-medium leading-snug">{studentExtraInfo.achievements}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Summary Section */}
+              <div>
+                <h4 className="font-bold text-xs uppercase tracking-widest text-[#5E171B] mb-2.5">Course Completion & Lessons Watched</h4>
+                
+                {isLoadingTracking ? (
+                  <div className="text-center py-6 text-xs text-gray-500 font-medium">Fetching telemetry statistics...</div>
+                ) : studentProgressData.length === 0 ? (
+                  <div className="text-center py-10 bg-gray-55/50 rounded-xl border border-gray-150 text-xs text-gray-500">
+                     This student hasn't watched any video lessons yet.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100 border border-gray-250 rounded-xl bg-white max-h-[220px] overflow-y-auto">
+                    {studentProgressData.map((prog) => (
+                      <div key={prog.id} className="p-3 hover:bg-gray-50/30 flex justify-between items-center text-xs">
+                        <div className="flex flex-col gap-0.5 max-w-[70%]">
+                          <span className="font-semibold text-gray-850 line-clamp-1">{prog.lessons?.title || 'Unknown Lesson'}</span>
+                          <span className="text-[10px] text-gray-500 line-clamp-1">Course: {prog.courses?.title || 'Unknown Course'}</span>
+                        </div>
+                        <div className="text-right flex flex-col items-end gap-1">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border
+                            ${prog.status === 'completed' 
+                              ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                              : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}`}>
+                            {prog.status}
+                          </span>
+                          <span className="text-[9px] text-gray-400 font-mono">
+                            {new Date(prog.updated_at || prog.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end mt-4">
+            <Button className="bg-[#5E171B] hover:bg-[#450F13] text-white text-xs h-9 px-4 rounded-lg" onClick={() => setTrackProgressOpen(false)}>
+              Close Tracker
             </Button>
           </div>
         </DialogContent>

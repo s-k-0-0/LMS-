@@ -8,6 +8,7 @@ import UsersPanel from './pages/UsersPanel';
 import VideoPlayer from './pages/VideoPlayer';
 import Courses from './pages/Courses';
 import Login from './pages/Login';
+import Tracker from './pages/Tracker';
 
 function App() {
   return (
@@ -54,6 +55,13 @@ function App() {
           <Route path="approvals" element={
             <ProtectedRoute allowedRoles={['dept_admin', 'dean', 'super_admin']}>
               <ContentApprovals />
+            </ProtectedRoute>
+          } />
+
+          {/* Academic Progression & Live Grading Telemetry */}
+          <Route path="tracker" element={
+            <ProtectedRoute allowedRoles={['faculty', 'dept_admin', 'dean', 'super_admin']}>
+              <Tracker />
             </ProtectedRoute>
           } />
 

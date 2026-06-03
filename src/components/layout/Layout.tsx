@@ -11,7 +11,8 @@ import {
   BrainCircuit, 
   LogOut,
   GraduationCap,
-  CheckSquare
+  CheckSquare,
+  Award
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Label } from '../ui/label';
@@ -27,6 +28,16 @@ export function Layout() {
   const [editEmpId, setEditEmpId] = useState(profile?.emp_usn_id || '');
   const [editPhone, setEditPhone] = useState(profile?.phone || '');
   const [editBio, setEditBio] = useState(profile?.bio || '');
+  
+  // Custom metadata states per role
+  const [editAcademicYear, setEditAcademicYear] = useState('');
+  const [editMajorSubject, setEditMajorSubject] = useState('');
+  const [editAchievements, setEditAchievements] = useState('');
+  const [editDesignation, setEditDesignation] = useState('');
+  const [editExperience, setEditExperience] = useState('');
+  const [editResearchArea, setEditResearchArea] = useState('');
+  const [editPreferredYoga, setEditPreferredYoga] = useState('');
+
   const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
@@ -35,6 +46,22 @@ export function Layout() {
       if (!editEmpId && profile.emp_usn_id) setEditEmpId(profile.emp_usn_id);
       if (!editPhone && profile.phone) setEditPhone(profile.phone);
       if (!editBio && profile.bio) setEditBio(profile.bio);
+
+      try {
+        const cached = localStorage.getItem(`profile_details_${profile.id}`);
+        if (cached) {
+          const extra = JSON.parse(cached);
+          setEditAcademicYear(extra.academicYear || '');
+          setEditMajorSubject(extra.majorSubject || '');
+          setEditAchievements(extra.achievements || '');
+          setEditDesignation(extra.designation || '');
+          setEditExperience(extra.experience || '');
+          setEditResearchArea(extra.researchArea || '');
+          setEditPreferredYoga(extra.preferredYoga || '');
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
   }, [profile]);
 
@@ -53,6 +80,7 @@ export function Layout() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: GraduationCap, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
     { name: 'Courses', href: '/courses', icon: BookOpen, roles: ['student', 'faculty', 'dept_admin', 'dean', 'super_admin'] },
+    { name: 'Academic Tracker', href: '/tracker', icon: Award, roles: ['faculty', 'dept_admin', 'dean', 'super_admin'] },
     { name: 'Faculty Studio', href: '/studio', icon: Video, roles: ['faculty', 'dept_admin', 'dean', 'super_admin'] },
     { name: 'Approvals', href: '/approvals', icon: CheckSquare, roles: ['dept_admin', 'dean', 'super_admin'] },
     { name: 'Users Panel', href: '/admin', icon: Users, roles: ['dept_admin', 'dean', 'super_admin'] },
@@ -61,6 +89,21 @@ export function Layout() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
+  };
+
+  const cacheExtraFields = () => {
+    if (!profile) return;
+    localStorage.setItem(`profile_details_${profile.id}`, JSON.stringify({
+      phone: editPhone,
+      bio: editBio,
+      academicYear: editAcademicYear,
+      majorSubject: editMajorSubject,
+      achievements: editAchievements,
+      designation: editDesignation,
+      experience: editExperience,
+      researchArea: editResearchArea,
+      preferredYoga: editPreferredYoga
+    }));
   };
 
   const handleSaveProfile = async () => {
@@ -87,6 +130,7 @@ export function Layout() {
         .eq('id', profile.id);
         
       if (!fallbackError) {
+        cacheExtraFields();
         fetchProfile(profile.id);
         setIsSettingsOpen(false);
       } else {
@@ -94,6 +138,7 @@ export function Layout() {
       }
     } else if (!error) {
       // Soft update local profile to reflect changes without reloading
+      cacheExtraFields();
       fetchProfile(profile.id);
       setIsSettingsOpen(false);
     } else {
@@ -161,14 +206,14 @@ export function Layout() {
       </div>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[425px]">
+        <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Profile Settings</DialogTitle>
             <DialogDescription className="text-gray-600">
               View and manage your account details. Contact super admin to change roles.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-1 space-y-1">
             <div className="grid gap-2">
               <Label htmlFor="name" className="text-gray-700">Full Name</Label>
               <Input
@@ -229,7 +274,7 @@ export function Layout() {
                 disabled
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 pb-2">
               <Label htmlFor="dept" className="text-gray-700">Department</Label>
               <Input
                 id="dept"
@@ -238,8 +283,92 @@ export function Layout() {
                 disabled
               />
             </div>
+
+            {/* Conditional Student Fields */}
+            {profile?.role === 'student' && (
+              <div className="border-t border-gray-150 pt-3 mt-2 space-y-3">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#5E171B] block">Student Scholastic Details</span>
+                <div className="grid gap-2">
+                  <Label htmlFor="academic_year" className="text-gray-700">Academic Year</Label>
+                  <Input
+                    id="academic_year"
+                    value={editAcademicYear}
+                    onChange={(e) => setEditAcademicYear(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. 2nd Year B.Sc. Yogic Sciences"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="major_subject" className="text-gray-700">Major/Specialty</Label>
+                  <Input
+                    id="major_subject"
+                    value={editMajorSubject}
+                    onChange={(e) => setEditMajorSubject(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. Yoga Therapy, Yogic Nutrition"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="achievements" className="text-gray-700">Honors & Certifications</Label>
+                  <Input
+                    id="achievements"
+                    value={editAchievements}
+                    onChange={(e) => setEditAchievements(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. National Yoga Championship Gold Medalist"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Conditional Faculty, Dean, etc. Fields */}
+            {['faculty', 'dean'].includes(profile?.role || '') && (
+              <div className="border-t border-gray-150 pt-3 mt-2 space-y-3">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#5E171B] block">Professional Academic Credentials</span>
+                <div className="grid gap-2">
+                  <Label htmlFor="designation" className="text-gray-700">Designation / Academic Title</Label>
+                  <Input
+                    id="designation"
+                    value={editDesignation}
+                    onChange={(e) => setEditDesignation(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. Professor & Dean of Yoga Sciences"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="experience" className="text-gray-700">Years of Focus & Experience</Label>
+                  <Input
+                    id="experience"
+                    value={editExperience}
+                    onChange={(e) => setEditExperience(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. 15 Years in Yogic Rehabilitation"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="research_area" className="text-gray-700">Primary Research Domain</Label>
+                  <Input
+                    id="research_area"
+                    value={editResearchArea}
+                    onChange={(e) => setEditResearchArea(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. Cyclic Meditation & Cardiac Autonomic Control"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="preferred_yoga" className="text-gray-700">Sadhana Routine / Yoga Form</Label>
+                  <Input
+                    id="preferred_yoga"
+                    value={editPreferredYoga}
+                    onChange={(e) => setEditPreferredYoga(e.target.value)}
+                    className="bg-gray-50 border-gray-200 text-gray-900"
+                    placeholder="e.g. Patanjali Raja Yoga & Pranayama"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" className="text-gray-900" onClick={() => setIsSettingsOpen(false)}>
               Cancel
             </Button>

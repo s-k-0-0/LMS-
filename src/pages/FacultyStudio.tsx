@@ -19,6 +19,12 @@ export default function FacultyStudio() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [resourceLink, setResourceLink] = useState('');
   
+  // Custom LMS Course metadata
+  const [credits, setCredits] = useState('3');
+  const [difficulty, setDifficulty] = useState('Beginner');
+  const [deadline, setDeadline] = useState('');
+  const [gradingWeight, setGradingWeight] = useState('Pass/Fail');
+  
   const [isUploading, setIsUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [errorInfo, setErrorInfo] = useState<string | null>(null);
@@ -67,7 +73,7 @@ export default function FacultyStudio() {
 
     try {
       // 1. Create Course
-      const { data: courseData, error: courseError } = await supabase.from('courses').insert({
+      const insertObj: any = {
         title: title,
         description: desc,
         faculty_id: profile?.id,
@@ -75,8 +81,30 @@ export default function FacultyStudio() {
         status: 'pending_verification',
         is_compiler_enabled: category === 'technical' ? isCompilerEnabled : false,
         category: category,
-        content_type: contentTypeSelection
-      }).select().single();
+        content_type: contentTypeSelection,
+        credits: parseInt(credits) || 3,
+        difficulty: difficulty,
+        deadline: deadline || null,
+        grading_weight: gradingWeight
+      };
+
+      let { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .insert(insertObj)
+        .select()
+        .single();
+
+      if (courseError && courseError.message?.includes('column')) {
+        // Fallback insertion - remove custom columns if SQL Editor has not run migration #5 yet
+        const { credits: _, difficulty: __, deadline: ___, grading_weight: ____, ...backupObj } = insertObj;
+        const fallbackRes = await supabase
+          .from('courses')
+          .insert(backupObj)
+          .select()
+          .single();
+        courseData = fallbackRes.data;
+        courseError = fallbackRes.error;
+      }
 
       if (courseError) throw courseError;
 
@@ -101,6 +129,10 @@ export default function FacultyStudio() {
       setIsCompilerEnabled(false);
       setCategory('technical');
       setContentTypeSelection('course');
+      setCredits('3');
+      setDifficulty('Beginner');
+      setDeadline('');
+      setGradingWeight('Pass/Fail');
     } catch (err: any) {
       console.error(err);
       setErrorInfo(err.message || 'Error saving to database');
@@ -160,6 +192,71 @@ export default function FacultyStudio() {
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Dynamic Educational Metadata Settings */}
+              <div className="bg-gray-50 border border-gray-150 rounded-xl p-4 space-y-4">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#5E171B] block">LMS Course Specifications</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="credits" className="text-xs text-gray-700">Course Credits (CR)</Label>
+                    <Select value={credits} onValueChange={setCredits}>
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 rounded-lg h-9 text-xs">
+                        <SelectValue placeholder="Credits" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-gray-800">
+                        <SelectItem value="1">1 Credit Hour</SelectItem>
+                        <SelectItem value="2">2 Credit Hours</SelectItem>
+                        <SelectItem value="3">3 Credit Hours</SelectItem>
+                        <SelectItem value="4">4 Credit Hours</SelectItem>
+                        <SelectItem value="5">5 Credit Hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="difficulty" className="text-xs text-gray-700">Difficulty Grade Level</Label>
+                    <Select value={difficulty} onValueChange={setDifficulty}>
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 rounded-lg h-9 text-xs">
+                        <SelectValue placeholder="Difficulty" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-gray-800">
+                        <SelectItem value="Beginner">Beginner Level</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate Level</SelectItem>
+                        <SelectItem value="Advanced">Advanced Level</SelectItem>
+                        <SelectItem value="All Levels">All Levels (Open)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="deadline" className="text-xs text-gray-700">Completion Deadline</Label>
+                    <Input 
+                      id="deadline" 
+                      type="text" 
+                      value={deadline} 
+                      onChange={e => setDeadline(e.target.value)} 
+                      className="bg-white border-gray-200 text-gray-900 h-9 text-xs rounded-lg"
+                      placeholder="e.g. June 30, 2026 or Flexible"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="grading" className="text-xs text-gray-700">Grading / Marks Standard</Label>
+                    <Select value={gradingWeight} onValueChange={setGradingWeight}>
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 rounded-lg h-9 text-xs">
+                        <SelectValue placeholder="Select Criteria" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-gray-800">
+                        <SelectItem value="Pass/Fail">Satisfactory Pass / Fail</SelectItem>
+                        <SelectItem value="Letter Grade (A+ to F)">Letter Grade (A+ to F)</SelectItem>
+                        <SelectItem value="Percentage Score (0-100)">Percentage Score (0-100)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 

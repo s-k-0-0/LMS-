@@ -1,6 +1,8 @@
 {
-  "name": "Generated",
-  "description": "",
+  "name": "S-VYASA LMS",
+  "description": "A high-fidelity academic Learning Management System for S-VYASA University, integrating robust student tracking, secure custom-skinned video streams, interactive notebooks, and automated grading systems.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
