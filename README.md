@@ -12,6 +12,7 @@ https://svyasa-lms.vercel.app
 
 
 For our reference 
-1. Modules
-   A. Pradeep = Login + Content Approval <br>
-   B. SK = Faculty Studio + Compiler
+Modules
+1. SK + Adarsh + (Karbu)
+2. KP + Pradeep + (Karbu)
+3. Ganesh + Suhas + (Karbu) 
