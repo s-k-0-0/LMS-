@@ -9,3 +9,9 @@ NOTE - Make sure you have react and nodejs
 5. Run "npm run dev" so that it opens in port 3000 or 8000 it may vary depend on the user's device.
 
 https://svyasa-lms.vercel.app
+
+
+For our reference 
+1. Modules
+   A. Pradeep = Login + Content Approval
+   B. SK = Faculty Studio + Compiler
