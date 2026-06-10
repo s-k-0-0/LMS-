@@ -12,6 +12,11 @@ export default function UsersPanel() {
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Search & Filters state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [deptFilter, setDeptFilter] = useState('all');
+  
   // Manage Students state
   const [manageFacultyOpen, setManageFacultyOpen] = useState(false);
   const [selectedFaculty, setSelectedFaculty] = useState<Profile | null>(null);
@@ -194,15 +199,114 @@ export default function UsersPanel() {
 
   const availableRoles = getAvailableRoles();
 
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (u.emp_usn_id || '').toLowerCase().includes(searchQuery.toLowerCase());
+                          
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    const matchesDept = deptFilter === 'all' || u.department_id === deptFilter;
+    
+    return matchesSearch && matchesRole && matchesDept;
+  });
+
+  const getRoleBadgeCount = (role: string) => {
+    if (role === 'all') return users.length;
+    return users.filter(u => u.role === role).length;
+  };
+
   return (
-    <div className="max-w-6xl mx-auto py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-6xl mx-auto py-8 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center text-gray-900">
             <ShieldAlert className="h-6 w-6 text-[#5E171B] mr-2" />
             Users Management Panel
           </h1>
           <p className="text-sm text-gray-700">Manage user roles, departments, and system access.</p>
+        </div>
+      </div>
+
+      {/* Advanced search, filters and controls */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+        {/* Top bar: search and department */}
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search users by name, email, or USN/employee ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-neutral-50 border border-gray-200 text-gray-900 rounded-lg pl-10 pr-4 py-2.5 text-xs focus:ring-1 focus:ring-[#5E171B]/30 focus:border-[#5E171B]/50 focus:outline-none transition-all placeholder:text-gray-400"
+            />
+            <span className="absolute left-3.5 top-3.5 text-gray-400">🔍</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col min-w-[200px]">
+              <span className="text-[9px] uppercase tracking-wider font-extrabold text-gray-500 mb-1 pl-1">Department Filter</span>
+              <select 
+                value={deptFilter} 
+                onChange={e => setDeptFilter(e.target.value)}
+                className="bg-neutral-50 border border-gray-200 text-gray-800 rounded-lg px-3 py-2 text-xs shadow-xs focus:ring-1 focus:ring-[#5E171B]/35 focus:outline-none focus:border-[#5E171B]/50 transition-all cursor-pointer h-9 font-medium"
+              >
+                <option value="all">🏢 All Departments</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-end h-full pt-4">
+              <Button 
+                size="sm" 
+                onClick={fetchUsersAndDepts} 
+                className="bg-[#5E171B]/5 hover:bg-[#5E171B]/10 text-[#5E171B] border border-[#5E171B]/15 hover:border-[#5E171B]/20 rounded-lg text-xs font-bold transition-all h-9 px-3 flex items-center justify-center cursor-pointer active:scale-97 transform"
+              >
+                Reload
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Selected role filters - tab segment bar */}
+        <div className="border-t border-gray-100 pt-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[9px] uppercase tracking-wider font-extrabold text-gray-500 pl-0.5">Filter by Assigned Role</span>
+            <div className="flex flex-wrap bg-gray-100 p-0.5 gap-0.5 rounded-lg border border-gray-200">
+              {[
+                { label: 'All Users', value: 'all' },
+                { label: 'Students', value: 'student' },
+                { label: 'Faculty Members', value: 'faculty' },
+                { label: 'Dept Admins', value: 'dept_admin' },
+                { label: 'Deans', value: 'dean' },
+                { label: 'Super Admins', value: 'super_admin' },
+              ].map(tab => {
+                const count = getRoleBadgeCount(tab.value);
+                const isActive = roleFilter === tab.value;
+                return (
+                  <button 
+                    key={tab.value}
+                    onClick={() => setRoleFilter(tab.value)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isActive 
+                        ? 'bg-white text-neutral-950 shadow-xs border border-gray-200/50' 
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/30'
+                    }`}
+                  >
+                    {tab.label}
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-[#5E171B]/15 text-[#5E171B]' : 'bg-gray-200 text-gray-600'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="text-[10px] text-gray-500 font-mono tracking-wide bg-neutral-50 px-3 py-1.5 rounded-md border border-gray-150 self-end">
+            Viewing: <strong>{filteredUsers.length}</strong> of <strong>{users.length}</strong> profiles
+          </div>
         </div>
       </div>
 
@@ -222,11 +326,11 @@ export default function UsersPanel() {
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-gray-600">Loading users...</TableCell>
               </TableRow>
-            ) : users.length === 0 ? (
+            ) : filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-gray-600">No users found.</TableCell>
               </TableRow>
-            ) : users.map((user) => (
+            ) : filteredUsers.map((user) => (
               <TableRow key={user.id} className="border-b border-gray-200/50 hover:bg-gray-50/30 transition-colors">
                 <TableCell className="px-6 py-4 font-medium text-gray-700">
                   <div className="flex items-center">

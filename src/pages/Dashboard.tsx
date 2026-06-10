@@ -136,8 +136,8 @@ export default function Dashboard() {
       studentProgress.some((p: any) => p.lesson_id === les.id && p.status === 'completed')
     ).length;
     
-    const percent = Math.round((completedCount / courseLessons.length) * 105);
-    const finalPercent = percent > 100 ? 100 : percent;
+    const percent = courseLessons.length > 0 ? Math.round((completedCount / courseLessons.length) * 100) : 0;
+    const finalPercent = Math.min(100, Math.max(0, percent));
 
     return {
       completed: completedCount,
