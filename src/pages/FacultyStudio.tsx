@@ -25,6 +25,21 @@ export default function FacultyStudio() {
   const [deadline, setDeadline] = useState('');
   const [gradingWeight, setGradingWeight] = useState('Pass/Fail');
   
+  // Hierarchy & Availability settings
+  const [isGlobal, setIsGlobal] = useState(false);
+  const [isMandatory, setIsMandatory] = useState(false);
+  const [targetRoles, setTargetRoles] = useState<string[]>(['student']);
+  const [targetDepartmentId, setTargetDepartmentId] = useState<string>('all');
+  const [departmentsList, setDepartmentsList] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchDepts = async () => {
+      const { data } = await supabase.from('departments').select('*');
+      if (data) setDepartmentsList(data);
+    };
+    fetchDepts();
+  }, []);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
   const [errorInfo, setErrorInfo] = useState<string | null>(null);
@@ -65,61 +80,131 @@ export default function FacultyStudio() {
       return;
     }
 
-    if (!profile?.department_id) {
+    if (profile?.role !== 'super_admin' && !profile?.department_id) {
        setErrorInfo("You must be assigned to a department to upload content.");
        setIsUploading(false);
        return;
     }
 
     try {
-      // 1. Create Course
-      const insertObj: any = {
-        title: title,
-        description: desc,
-        faculty_id: profile?.id,
-        department_id: profile?.department_id,
-        status: 'pending_verification',
-        is_compiler_enabled: category === 'technical' ? isCompilerEnabled : false,
-        category: category,
-        content_type: contentTypeSelection,
-        credits: parseInt(credits) || 3,
-        difficulty: difficulty,
-        deadline: deadline || null,
-        grading_weight: gradingWeight
-      };
-
-      let { data: courseData, error: courseError } = await supabase
-        .from('courses')
-        .insert(insertObj)
-        .select()
-        .single();
-
-      if (courseError && courseError.message?.includes('column')) {
-        // Fallback insertion - remove custom columns if SQL Editor has not run migration #5 yet
-        const { credits: _, difficulty: __, deadline: ___, grading_weight: ____, ...backupObj } = insertObj;
-        const fallbackRes = await supabase
-          .from('courses')
-          .insert(backupObj)
-          .select()
-          .single();
-        courseData = fallbackRes.data;
-        courseError = fallbackRes.error;
+      // Build LMS Metadata
+      const metadata: any = {};
+      if (profile?.role === 'super_admin' && isGlobal) {
+        metadata.available_all_depts = true;
+      }
+      if (isMandatory) {
+        metadata.mandatory_roles = targetRoles;
+        if (profile?.role === 'super_admin') {
+          if (targetDepartmentId !== 'all') {
+            metadata.mandatory_depts = [targetDepartmentId];
+          }
+        } else if (profile?.role === 'dean') {
+          if (targetDepartmentId !== 'all') {
+            metadata.mandatory_depts = [targetDepartmentId];
+          } else if (profile?.department_id) {
+            metadata.mandatory_depts = [profile.department_id];
+          }
+        } else if (profile?.role === 'dept_admin') {
+          if (profile?.department_id) {
+            metadata.mandatory_depts = [profile.department_id];
+          }
+        }
       }
 
-      if (courseError) throw courseError;
-
-      // 2. Create Lesson
-      const { error: lessonError } = await supabase.from('lessons').insert({
-        course_id: courseData.id,
-        title: title,
-        content_type: lessonType,
-        cf_stream_id: ytId,
-        external_url: resourceLink || null,
-        created_by: profile?.id,
-        status: 'pending_verification'
-      });
-
-      if (lessonError) throw lessonError;
+      // If Super Admin publishes global, clone across all departments
+      if (profile?.role === 'super_admin' && isGlobal) {
+        // Query all departments
+        const { data: depts } = await supabase.from('departments').select('id');
+        const deptIds = depts?.map(d => d.id) || [];
+        
+        let success = false;
+        let lastError = null;
+        const groupId = `global_${Date.now()}`;
+        metadata.global_course_group_id = groupId;
+        const finalDescWithGroup = `${desc.trim()}\n\n<!--LMS_METADATA: ${JSON.stringify(metadata)}-->`;
+        
+        if (deptIds.length > 0) {
+          for (const deptId of deptIds) {
+            const insertObj: any = {
+              title: title,
+              description: finalDescWithGroup,
+              faculty_id: profile?.id,
+              department_id: deptId,
+              status: 'published', // Super admin content publishes immediately
+              is_compiler_enabled: category === 'technical' ? isCompilerEnabled : false,
+              category: category,
+              content_type: contentTypeSelection,
+              credits: parseInt(credits) || 3,
+              difficulty: difficulty,
+              deadline: deadline || null,
+              grading_weight: gradingWeight,
+              is_mandatory: isMandatory
+            };
+            
+            const { data: courseData, error: courseError } = await supabase
+              .from('courses')
+              .insert(insertObj)
+              .select()
+              .single();
+              
+            if (courseError) {
+              lastError = courseError;
+              continue;
+            }
+            
+            // Insert Lesson
+            await supabase.from('lessons').insert({
+              course_id: courseData.id,
+              title: title,
+              content_type: lessonType,
+              cf_stream_id: ytId,
+              external_url: resourceLink || null,
+              created_by: profile?.id,
+              status: 'published'
+            });
+            success = true;
+          }
+        }
+        
+        if (lastError && !success) throw lastError;
+      } else {
+        // Standard single insertion
+        const finalDescWithMeta = (isMandatory || isGlobal) ? `${desc.trim()}\n\n<!--LMS_METADATA: ${JSON.stringify(metadata)}-->` : desc;
+        
+        const insertObj: any = {
+          title: title,
+          description: finalDescWithMeta,
+          faculty_id: profile?.id,
+          department_id: profile?.department_id || null,
+          status: profile?.role === 'super_admin' ? 'published' : 'pending_verification',
+          is_compiler_enabled: category === 'technical' ? isCompilerEnabled : false,
+          category: category,
+          content_type: contentTypeSelection,
+          credits: parseInt(credits) || 3,
+          difficulty: difficulty,
+          deadline: deadline || null,
+          grading_weight: gradingWeight,
+          is_mandatory: isMandatory
+        };
+        
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .insert(insertObj)
+          .select()
+          .single();
+          
+        if (courseError) throw courseError;
+        
+        await supabase.from('lessons').insert({
+          course_id: courseData.id,
+          title: title,
+          content_type: lessonType,
+          cf_stream_id: ytId,
+          external_url: resourceLink || null,
+          created_by: profile?.id,
+          status: profile?.role === 'super_admin' ? 'published' : 'pending_verification'
+        });
+      }
       
       setUploaded(true);
       setTitle('');
@@ -133,6 +218,10 @@ export default function FacultyStudio() {
       setDifficulty('Beginner');
       setDeadline('');
       setGradingWeight('Pass/Fail');
+      setIsGlobal(false);
+      setIsMandatory(false);
+      setTargetRoles(['student']);
+      setTargetDepartmentId('all');
     } catch (err: any) {
       console.error(err);
       setErrorInfo(err.message || 'Error saving to database');
@@ -259,6 +348,166 @@ export default function FacultyStudio() {
                   </div>
                 </div>
               </div>
+
+              {/* Hierarchical Mandates & Multi-Department Access Settings */}
+              {['super_admin', 'dean', 'dept_admin'].includes(profile?.role || '') && (
+                <div className="bg-amber-50/50 border border-amber-200 rounded-xl p-4 space-y-4">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 block">Hierarchical Access & Mandate Control</span>
+                  
+                  {profile?.role === 'super_admin' && (
+                    <label className="flex items-center space-x-2 text-sm font-semibold text-gray-800 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isGlobal}
+                        onChange={(e) => {
+                          setIsGlobal(e.target.checked);
+                          if (e.target.checked) {
+                            setTargetDepartmentId('all');
+                          }
+                        }}
+                        className="rounded border-amber-400 text-amber-750 shadow-sm focus:ring-amber-500 focus:ring-offset-0 bg-white h-4 w-4"
+                      />
+                      <span>Make Available in All Departments (Global Course)</span>
+                    </label>
+                  )}
+
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-800 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isMandatory}
+                      onChange={(e) => setIsMandatory(e.target.checked)}
+                      className="rounded border-amber-400 text-amber-750 shadow-sm focus:ring-amber-500 focus:ring-offset-0 bg-white h-4 w-4"
+                    />
+                    <span>Make this Course Mandatory</span>
+                  </label>
+
+                  {isMandatory && (
+                    <div className="pl-6 border-l-2 border-amber-200 space-y-4 pt-1">
+                      {/* Department scope */}
+                      {['super_admin', 'dean'].includes(profile?.role || '') ? (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-gray-700 font-bold">Mandatory Target Department Scope</Label>
+                          <Select value={targetDepartmentId} onValueChange={setTargetDepartmentId}>
+                            <SelectTrigger className="bg-white border-amber-200 text-gray-950 rounded-lg h-9 text-xs">
+                              <SelectValue placeholder="Select Department Scope" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-800">
+                              <SelectItem value="all">All Departments ({isGlobal ? 'Global' : 'Multiple'})</SelectItem>
+                              {departmentsList.map(dept => (
+                                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-amber-800 font-medium bg-amber-100/40 p-2.5 rounded-lg border border-amber-200/50">
+                          Scope: <strong className="uppercase">Own Department Only</strong> (Strictly restricted per administration hierarchy)
+                        </div>
+                      )}
+
+                      {/* Target Roles selection of lower hierarchy */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-700 font-bold block">Mandatory Target Roles</Label>
+                        <div className="flex flex-wrap gap-4 pt-1">
+                          {profile?.role === 'super_admin' && (
+                            <>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('student')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'student'] : targetRoles.filter(r => r !== 'student'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Students</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('faculty')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'faculty'] : targetRoles.filter(r => r !== 'faculty'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Faculty</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('dept_admin')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'dept_admin'] : targetRoles.filter(r => r !== 'dept_admin'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Dept Admins</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('dean')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'dean'] : targetRoles.filter(r => r !== 'dean'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Deans</span>
+                              </label>
+                            </>
+                          )}
+                          {profile?.role === 'dean' && (
+                            <>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('student')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'student'] : targetRoles.filter(r => r !== 'student'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Students</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('faculty')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'faculty'] : targetRoles.filter(r => r !== 'faculty'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Faculty</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('dept_admin')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'dept_admin'] : targetRoles.filter(r => r !== 'dept_admin'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Dept Admins</span>
+                              </label>
+                            </>
+                          )}
+                          {profile?.role === 'dept_admin' && (
+                            <>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('student')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'student'] : targetRoles.filter(r => r !== 'student'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Students Only</span>
+                              </label>
+                              <label className="flex items-center space-x-1.5 text-xs text-gray-700 cursor-pointer">
+                                <input 
+                                  type="checkbox"
+                                  checked={targetRoles.includes('faculty')}
+                                  onChange={(e) => setTargetRoles(e.target.checked ? [...targetRoles, 'faculty'] : targetRoles.filter(r => r !== 'faculty'))}
+                                  className="rounded border-gray-300 text-amber-700"
+                                />
+                                <span>Faculty Members</span>
+                              </label>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-gray-700">Content Title</Label>
